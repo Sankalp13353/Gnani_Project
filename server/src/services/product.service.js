@@ -4,9 +4,10 @@ import prisma from '../config/prisma.js';
  * Product Service - Catalogue read and query operations
  */
 
-export const listActiveProducts = async ({ category, search, limit = 50, offset = 0 } = {}) => {
+export const listActiveProducts = async ({ storeId, category, search, limit = 50, offset = 0 } = {}) => {
   const where = {
     isActive: true,
+    ...(storeId && { storeId }),
     ...(category && { category }),
     ...(search && {
       name: {

@@ -6,8 +6,9 @@ import { listActiveProducts, getProductById } from '../services/product.service.
  */
 export const getProducts = async (req, res, next) => {
   try {
-    const { category, search, limit, offset } = req.query;
+    const { storeId, store_id, category, search, limit, offset } = req.query;
     const products = await listActiveProducts({
+      storeId: storeId || store_id,
       category,
       search,
       limit: limit ? parseInt(limit, 10) : 50,

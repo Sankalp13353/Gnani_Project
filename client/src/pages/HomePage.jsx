@@ -3,6 +3,7 @@ import { Sparkles, Bot, Store } from 'lucide-react';
 import { useHealthCheck } from '../hooks/useHealthCheck.js';
 import HealthStatusCard from '../components/HealthStatusCard.jsx';
 import OrderManagementPlaceholder from '../components/OrderManagementPlaceholder.jsx';
+import VoiceOrderIntake from '../components/VoiceOrderIntake.jsx';
 
 export const HomePage = () => {
   const { status, data, dbStatus, error, lastChecked, refresh } = useHealthCheck();
@@ -36,7 +37,7 @@ export const HomePage = () => {
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-white/10 text-xs text-slate-200">
               <Bot className="w-4 h-4 text-emerald-400" />
-              <span>Gnani AI Integration (Phases 3-5)</span>
+              <span>Gnani AI Prisma STT Active</span>
             </div>
           </div>
         </div>
@@ -44,6 +45,9 @@ export const HomePage = () => {
         {/* Subtle decorative background circle */}
         <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
       </div>
+
+      {/* Voice Order Intake Component (Phase 4) */}
+      <VoiceOrderIntake />
 
       {/* Grid: Health Status & Placeholder Modules */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

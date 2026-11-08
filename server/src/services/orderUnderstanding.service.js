@@ -16,7 +16,7 @@ import { logger } from '../utils/logger.js';
  * @param {string} transcript - Raw text transcript from customer
  * @returns {Promise<object>} Draft order data structure
  */
-export const parseOrderTranscript = async (transcript) => {
+export const parseOrderTranscript = async (transcript, { storeId } = {}) => {
   if (!transcript || typeof transcript !== 'string' || transcript.trim().length === 0) {
     const error = new Error('Transcript is required and must be a non-empty string');
     error.status = 400;
@@ -26,11 +26,15 @@ export const parseOrderTranscript = async (transcript) => {
   const rawTranscript = transcript.trim();
   logger.info(`Processing order transcript: "${rawTranscript}"`);
 
-  // 1. Fetch active products from the PostgreSQL catalogue
+  // 1. Fetch active products from the PostgreSQL catalogue (scoped to store if provided)
   const catalogueProducts = await prisma.product.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(storeId && { storeId }),
+    },
     select: {
       id: true,
+      storeId: true,
       name: true,
       brand: true,
       category: true,
@@ -38,6 +42,7 @@ export const parseOrderTranscript = async (transcript) => {
       price: true,
       description: true,
       isActive: true,
+      isAvailable: true,
     },
   });
 

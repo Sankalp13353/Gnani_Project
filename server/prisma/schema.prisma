@@ -1,5 +1,5 @@
 // CallSaar Prisma Schema
-// Phase 2: Database Design & Integration
+// Phase A: Multi-Store Database Architecture
 
 generator client {
   provider = "prisma-client-js"
@@ -11,17 +11,50 @@ datasource db {
 }
 
 enum OrderStatus {
-  PENDING_CONFIRMATION
-  CONFIRMED
-  PACKING
-  READY
+  PENDING_APPROVAL
+  ACCEPTED
+  PREPARING
+  READY_FOR_PICKUP
   COMPLETED
+  REJECTED
   CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum PaymentMethod {
+  CASH_ON_PICKUP
+  UPI_AT_STORE
 }
 
 enum OrderSource {
   VOICE
   MANUAL
+}
+
+model Store {
+  id           String    @id @default(uuid())
+  name         String
+  ownerName    String
+  phone        String    @unique
+  passwordHash String
+  address      String
+  city         String
+  pincode      String
+  upiId        String?
+  isOpen       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  products     Product[]
+  orders       Order[]
+
+  @@index([phone])
+  @@index([city, pincode])
+  @@map("stores")
 }
 
 model Customer {
@@ -39,39 +72,51 @@ model Customer {
 
 model Product {
   id          String   @id @default(uuid())
+  storeId     String
   name        String
   description String?
   category    String?
   brand       String?
   unit        String
   price       Decimal  @db.Decimal(10, 2)
+  isAvailable Boolean  @default(true)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  orderItems OrderItem[]
+  store       Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
 
+  @@index([storeId, isActive, isAvailable])
+  @@index([storeId, name])
   @@index([name])
   @@index([category])
   @@map("products")
 }
 
 model Order {
-  id          String      @id @default(uuid())
-  orderNumber String      @unique
-  customerId  String
-  status      OrderStatus @default(PENDING_CONFIRMATION)
-  source      OrderSource @default(VOICE)
-  subtotal    Decimal     @db.Decimal(10, 2)
-  notes       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  confirmedAt DateTime?
-  completedAt DateTime?
+  id              String        @id @default(uuid())
+  orderNumber     String        @unique
+  storeId         String
+  customerId      String
+  status          OrderStatus   @default(PENDING_APPROVAL)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  paymentMethod   PaymentMethod @default(CASH_ON_PICKUP)
+  source          OrderSource   @default(VOICE)
+  subtotal        Decimal       @db.Decimal(10, 2)
+  notes           String?
+  rejectionReason String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  acceptedAt      DateTime?
+  readyAt         DateTime?
+  completedAt     DateTime?
 
-  customer Customer    @relation(fields: [customerId], references: [id])
-  items    OrderItem[]
+  store           Store         @relation(fields: [storeId], references: [id])
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
 
+  @@index([storeId, status])
   @@index([customerId])
   @@index([status])
   @@index([createdAt])
@@ -89,8 +134,8 @@ model OrderItem {
   lineTotal   Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
 
-  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
   @@index([productId])

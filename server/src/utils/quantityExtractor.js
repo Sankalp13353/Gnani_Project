@@ -9,22 +9,24 @@ import {
   cleanConversationalFillers,
   UNIT_VARIATIONS,
 } from './textNormalizer.js';
-import { findVocabularyMatch } from '../config/aliases.js';
 
 /**
  * Splits raw transcript into individual item candidate segments
+ * Unified across Hindi (Devanagari), English, and Hinglish
  * @param {string} transcript
  * @returns {Array<string>}
  */
 export const splitIntoItemSegments = (transcript) => {
   if (!transcript || typeof transcript !== 'string') return [];
 
-  // Normalize number words first so "aur ek" doesn't get confused
-  const preprocessed = transcript
-    .replace(/[;\n]/g, ',')
-    // Conjunctions representing item splits
-    .replace(/\b(aur\s+ek|aur\s+bhi|saath\s+mein|sath\s+me|sath\s+mein)\b/gi, ',')
-    .replace(/\b(aur|and|tatha|plus|also)\b/gi, ',');
+  // Normalize dandas, semicolons, newlines to commas
+  let preprocessed = transcript.replace(/[;\n।॥]/g, ',');
+
+  // Conjunction phrases (e.g. "aur bhi", "और भी", "साथ में")
+  preprocessed = preprocessed
+    .replace(/(?:^|[^\p{L}\p{M}\p{N}])(?:aur\s+bhi|saath\s+mein|sath\s+me|sath\s+mein|और\s+भी|साथ\s+में)(?=[^\p{L}\p{M}\p{N}]|$)/giu, ', ')
+    // Single conjunction words: "aur", "and", "tatha", "plus", "also", "और", "तथा", "एवं", "व"
+    .replace(/(?:^|[^\p{L}\p{M}\p{N}])(?:aur|and|tatha|plus|also|और|तथा|एवं|व)(?=[^\p{L}\p{M}\p{N}]|$)/giu, ', ');
 
   // Split by comma
   const rawSegments = preprocessed.split(',');
@@ -50,6 +52,7 @@ export const splitIntoItemSegments = (transcript) => {
 /**
  * Splits a segment if it has multiple quantities chained without punctuation
  * e.g. "2 kilo atta 1 litre oil" -> ["2 kilo atta", "1 litre oil"]
+ * Supports Devanagari and Latin characters
  * @param {string} segment
  * @returns {Array<string>}
  */
@@ -57,11 +60,19 @@ const splitMultiNumberSegment = (segment) => {
   // Convert spelled-out number words in a copy to detect positions
   const withDigits = replaceNumberWords(segment);
 
-  // Separate attached numbers and units like "2kg" -> "2 kg"
-  const spacedDigits = withDigits.replace(/(\d+(?:\.\d+)?)([a-zA-Z]+)/g, '$1 $2');
+  // Separate attached numbers and units like "2kg" -> "2 kg", "2किलो" -> "2 किलो"
+  const spacedDigits = withDigits
+    .replace(/(\d+(?:\.\d+)?)([\p{L}\p{M}]+)/gu, '$1 $2')
+    .replace(/([\p{L}\p{M}]+)(\d+(?:\.\d+)?)/gu, '$1 $2');
+
+  // Only attempt splitting if there are 2 or more distinct quantities in the segment
+  const numberMatches = spacedDigits.match(/\b\d+(?:\.\d+)?\b/g);
+  if (!numberMatches || numberMatches.length <= 1) {
+    return [segment];
+  }
 
   // Match boundaries where a number follows a word
-  const splitRegex = /(?<=[a-zA-Z\s])\s+(?=\d+(?:\.\d+)?\s+[a-zA-Z]+)/;
+  const splitRegex = /(?<=[\p{L}\p{M}\s])\s+(?=\d+(?:\.\d+)?\s+[\p{L}\p{M}]+)/u;
   const parts = spacedDigits.split(splitRegex);
 
   return parts.length > 1 ? parts : [segment];
@@ -69,6 +80,7 @@ const splitMultiNumberSegment = (segment) => {
 
 /**
  * Parses an individual item segment into quantity, unit, and product name
+ * Fully multilingual across Hindi (Devanagari), English, and Hinglish
  * @param {string} rawSegment
  * @returns {object} { originalText, quantity, unit, productPhrase, isFillerOnly }
  */
@@ -78,8 +90,10 @@ export const parseItemSegment = (rawSegment) => {
   // 1. Convert number words to digits
   let workingText = replaceNumberWords(originalText);
 
-  // 2. Separate attached numbers and letters (e.g. "2kg" -> "2 kg", "500gm" -> "500 gm")
-  workingText = workingText.replace(/(\d+(?:\.\d+)?)([a-zA-Z]+)/g, '$1 $2');
+  // 2. Separate attached numbers and letters/marks (e.g. "2kg" -> "2 kg", "500gm" -> "500 gm", "2किलो" -> "2 किलो")
+  workingText = workingText
+    .replace(/(\d+(?:\.\d+)?)([\p{L}\p{M}]+)/gu, '$1 $2')
+    .replace(/([\p{L}\p{M}]+)(\d+(?:\.\d+)?)/gu, '$1 $2');
 
   // 3. Clean conversational fillers and trailing punctuation
   workingText = cleanConversationalFillers(workingText);
@@ -95,11 +109,17 @@ export const parseItemSegment = (rawSegment) => {
     };
   }
 
-  // Remove vague quantity words like "some", "thoda", "kuch"
-  workingText = workingText.replace(/\b(some|thoda|kuch|zara)\b/gi, '').trim();
+  // Remove vague quantity words like "some", "thoda", "kuch", "zara", "थोड़ा", "कुछ", "ज़रा"
+  workingText = workingText
+    .replace(/(?:^|[^\p{L}\p{M}\p{N}])(?:some|thoda|kuch|zara|थोड़ा|थोड़ी|कुछ|ज़रा|जरा)(?=[^\p{L}\p{M}\p{N}]|$)/giu, ' ')
+    .trim();
 
-  // Pattern A: <quantity> <unit> <product> (e.g. "2 kilo atta", "1 litre sunflower oil")
-  const patternA = /^(\d+(?:\.\d+)?)\s+([a-zA-Z]+)\s+(.+)$/i;
+  // Optional connector pattern: ka, ke, ki, of, का, के, की
+  const CONNECTOR_OPTIONAL = '(?:(?:ka|ke|ki|of|का|के|की)\\s+)?';
+
+  // Pattern A: <quantity> <unit> [connector] <product>
+  // e.g. "2 kilo atta", "1 litre sunflower oil", "दो किलो आटा", "1 litre of sunflower oil", "3 packet of maggi"
+  const patternA = new RegExp(`^(\\d+(?:\\.\\d+)?)\\s+([^\\s]+)\\s+${CONNECTOR_OPTIONAL}(.+)$`, 'u');
   const matchA = workingText.match(patternA);
   if (matchA) {
     const [, qtyStr, possibleUnit, productPart] = matchA;
@@ -114,15 +134,21 @@ export const parseItemSegment = (rawSegment) => {
     }
   }
 
-  // Pattern B: <quantity> <product> <unit> (e.g. "2 milk packets", "3 maggi packet")
-  const patternB = /^(\d+(?:\.\d+)?)\s+(.+?)\s+([a-zA-Z]+)$/i;
+  // Pattern B: <quantity> <product> [connector] <unit>
+  // e.g. "2 milk packets", "3 maggi packet", "तीन मैगी का पैकेट", "3 maggi ka packet"
+  const patternB = new RegExp(`^(\\d+(?:\\.\\d+)?)\\s+(.+?)\\s+${CONNECTOR_OPTIONAL}([^\\s]+)$`, 'u');
   const matchB = workingText.match(patternB);
   if (matchB) {
     const [, qtyStr, productPart, possibleUnit] = matchB;
     if (isKnownUnit(possibleUnit)) {
-      // Check if productPart + possibleUnit is actually a composite product name (e.g. "parle g")
+      // Check if productPart + possibleUnit is actually a composite product name (e.g. "parle g", "पारले जी")
       const candidateFull = `${productPart} ${possibleUnit}`.trim().toLowerCase();
-      if (candidateFull === 'parle g' || candidateFull === 'parle-g' || findVocabularyMatch(candidateFull)) {
+      if (
+        candidateFull === 'parle g' ||
+        candidateFull === 'parle-g' ||
+        candidateFull === 'पारले जी' ||
+        candidateFull === 'पारले-जी'
+      ) {
         return {
           originalText,
           quantity: qtyStr,
@@ -142,12 +168,12 @@ export const parseItemSegment = (rawSegment) => {
     }
   }
 
-  // Pattern C: <quantity> <product> (unit omitted, e.g. "3 maggi", "2 parle g")
-  const patternC = /^(\d+(?:\.\d+)?)\s+(.+)$/i;
+  // Pattern C: <quantity> <product> (unit omitted, e.g. "3 maggi", "2 parle g", "3 मैगी")
+  const patternC = /^(\d+(?:\.\d+)?)\s+(.+)$/u;
   const matchC = workingText.match(patternC);
   if (matchC) {
     const [, qtyStr, productPart] = matchC;
-    // Check if productPart is just a unit (meaning product is missing)
+    // Check if productPart is just a unit (meaning product is missing, e.g. "2 packets", "२ पैकेट")
     if (isKnownUnit(productPart)) {
       return {
         originalText,
@@ -167,21 +193,34 @@ export const parseItemSegment = (rawSegment) => {
     };
   }
 
-  // Pattern D: <product> <quantity> <unit> (e.g. "atta 2 kg", "oil 1 litre")
-  const patternD = /^(.+?)\s+(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?$/i;
+  // Pattern D: <product> [connector] <quantity> [unit] (e.g. "atta 2 kg", "oil 1 litre", "दूध 1 लीटर", "मैगी के 3 पैकेट")
+  const patternD = new RegExp(`^(.+?)\\s+${CONNECTOR_OPTIONAL}(\\d+(?:\\.\\d+)?)(?:\\s+([^\\s]+))?$`, 'u');
   const matchD = workingText.match(patternD);
   if (matchD) {
     const [, productPart, qtyStr, possibleUnit] = matchD;
     return {
       originalText,
       quantity: qtyStr,
-      unit: possibleUnit ? normalizeUnit(possibleUnit) : null,
+      unit: possibleUnit && isKnownUnit(possibleUnit) ? normalizeUnit(possibleUnit) : null,
       productPhrase: cleanProductPhrase(productPart),
       isFillerOnly: false,
     };
   }
 
-  // Pattern E: Just a product with no quantity (e.g. "give me some milk" -> "milk")
+  // Pattern E: Just a standalone quantity (e.g. "2", "दो") with no product or unit
+  const patternE = /^(\d+(?:\.\d+)?)$/u;
+  const matchE = workingText.match(patternE);
+  if (matchE) {
+    return {
+      originalText,
+      quantity: matchE[1],
+      unit: null,
+      productPhrase: null,
+      isFillerOnly: false,
+    };
+  }
+
+  // Pattern F: Just a product with no quantity (e.g. "give me some milk" -> "milk", "दूध देना" -> "दूध")
   // Quantity is missing!
   return {
     originalText,
@@ -203,13 +242,19 @@ const isKnownUnit = (word) => {
 };
 
 /**
- * Cleans punctuation and excess spaces from product phrase
+ * Cleans punctuation, excess spaces, and residual connectors from product phrase
  * @param {string} phrase
  * @returns {string}
  */
 const cleanProductPhrase = (phrase) => {
   if (!phrase) return null;
-  const cleaned = cleanConversationalFillers(phrase);
+  let cleaned = cleanConversationalFillers(phrase);
+  // Strip leading and trailing genitive connectors: ka, ke, ki, of, का, के, की
+  cleaned = cleaned
+    .replace(/^(?:का|के|की|ka|ke|ki|of)\s+/giu, '')
+    .replace(/\s+(?:का|के|की|ka|ke|ki|of)$/giu, '')
+    .replace(/^[,.!?\-\\s।॥]+|[,.!?\-\\s।॥]+$/gu, '')
+    .trim();
   return cleaned.length > 0 ? cleaned : null;
 };
 

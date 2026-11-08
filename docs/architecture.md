@@ -8,9 +8,60 @@
 - **Phase 1 (Complete)**: Foundation – Full-stack monorepo, Express backend, React + Vite frontend, health check, baseline styling & environment management.
 - **Phase 2 (Complete)**: Data Layer – PostgreSQL database schema, Prisma ORM, migrations, and model seeds.
 - **Phase 3 (Complete)**: Order Understanding Engine – Text preprocessing, entity extraction, dynamic catalogue matching, ambiguity resolution, and draft order generation.
-- **Phase 4 (Upcoming)**: Speech-to-Text – Gnani AI Prisma integration for voice audio streaming and multilingual transcription.
+- **Phase 3.1 (Complete)**: Unit Conversion & Pricing Audit – Dimensional unit compatibility, sealed pack count calculation, and safe price conversions.
+- **Phase 4 (Complete)**: Speech-to-Text – Browser audio capture, Multer memory storage, Gnani AI Prisma v3 REST ASR API integration, and unified voice order processing pipeline.
 - **Phase 5 (Upcoming)**: Text-to-Speech & Confirmation – Gnani AI Timbre integration for voice playback and confirmation.
 - **Phase 6 (Upcoming)**: Dashboard & Packing Slips – Shopkeeper interface with order processing and printable receipt slips.
+
+---
+
+## Voice Order Intake & Speech Architecture (Phase 4)
+
+```
+                            Customer Spoken Audio (Browser)
+                                          │
+                                          ▼
+                      ┌───────────────────────────────────────┐
+                      │   Web Audio / MediaRecorder API       │
+                      │   - Audio format (webm / wav / mp4)   │
+                      │   - Browser audio preview & re-record │
+                      └───────────────────┬───────────────────┘
+                                          │
+                                          ▼ POST /api/speech/transcribe (multipart/form-data)
+                      ┌───────────────────────────────────────┐
+                      │     Server Speech Controller          │
+                      │   - Multer Memory Storage (in-memory) │
+                      │   - Audio MIME & Size Validation      │
+                      └───────────────────┬───────────────────┘
+                                          │
+                                          ▼
+                      ┌───────────────────────────────────────┐
+                      │   Gnani Prisma v3 REST Client         │
+                      │   - POST https://api.vachana.ai/stt/v3│
+                      │   - Headers: X-API-Key-ID             │
+                      │   - Model: prisma-v3.0                │
+                      │   - Language: indic-auto (code-mixed) │
+                      │   - Timeout & Provider Error Mapping  │
+                      └───────────────────┬───────────────────┘
+                                          │
+                                          ▼ Recognized Transcript + Audio Metadata
+                      ┌───────────────────────────────────────┐
+                      │   Order Understanding Engine (Ph. 3)  │
+                      │   - Normalization & Segmentation      │
+                      │   - Entity & Unit Extraction          │
+                      │   - Catalogue Match (PostgreSQL)      │
+                      │   - Unit Conversion (Phase 3.1)       │
+                      └───────────────────┬───────────────────┘
+                                          │
+                                          ▼
+                      ┌───────────────────────────────────────┐
+                      │   Structured Draft Order Response     │
+                      │   - Spoken transcript & line items    │
+                      │   - Currency-safe subtotal (INR ₹)    │
+                      │   - Audio latency, model & request ID │
+                      │   - ZERO database persistence         │
+                      └───────────────────────────────────────┘
+```
 
 ---
 

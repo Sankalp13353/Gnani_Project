@@ -78,11 +78,43 @@ const sampleProducts = [
 ];
 
 async function seed() {
-  console.log('Seeding CallSaar product catalogue...');
+  console.log('Seeding CallSaar multi-store database and catalogue...');
 
+  // 1. Seed or update the default demo store
+  const defaultStore = await prisma.store.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000001' },
+    update: {
+      name: 'CallSaar Kirana Store',
+      ownerName: 'Ramesh Kumar',
+      phone: '9876543210',
+      address: 'Shop No. 4, Main Market, MG Road',
+      city: 'Bengaluru',
+      pincode: '560001',
+      upiId: 'callsaar@upi',
+      isOpen: true,
+    },
+    create: {
+      id: '00000000-0000-0000-0000-000000000001',
+      name: 'CallSaar Kirana Store',
+      ownerName: 'Ramesh Kumar',
+      phone: '9876543210',
+      passwordHash: '$2b$10$placeholderForPhaseAImplementationOnly0000000000000',
+      address: 'Shop No. 4, Main Market, MG Road',
+      city: 'Bengaluru',
+      pincode: '560001',
+      upiId: 'callsaar@upi',
+      isOpen: true,
+    },
+  });
+  console.log(`Default store verified: ${defaultStore.name} (${defaultStore.id})`);
+
+  // 2. Seed catalogue products attached to the default store
   for (const item of sampleProducts) {
     const existing = await prisma.product.findFirst({
-      where: { name: item.name },
+      where: {
+        name: item.name,
+        storeId: defaultStore.id,
+      },
     });
 
     if (existing) {
@@ -95,19 +127,25 @@ async function seed() {
           price: item.price,
           description: item.description,
           isActive: item.isActive,
+          isAvailable: true,
         },
       });
       console.log(`Updated existing product: ${item.name} (${item.unit} @ ₹${item.price})`);
     } else {
       await prisma.product.create({
-        data: item,
+        data: {
+          ...item,
+          storeId: defaultStore.id,
+          isAvailable: true,
+        },
       });
       console.log(`Created product: ${item.name} (${item.unit} @ ₹${item.price})`);
     }
   }
 
+  const totalStores = await prisma.store.count();
   const totalCount = await prisma.product.count();
-  console.log(`Catalogue seeding completed successfully. Total products in database: ${totalCount}`);
+  console.log(`Seeding completed. Total stores: ${totalStores}, Total products: ${totalCount}`);
 }
 
 seed()

@@ -12,7 +12,8 @@ CallSaar is designed to enable small Indian retail businesses (Kirana stores) to
 - **Phase 2 (Complete)**: PostgreSQL database schema, Prisma ORM, migrations, product catalogue seeds, and database health checking.
 - **Phase 3 (Complete)**: Order Understanding Engine – text preprocessing, entity & quantity extraction, catalogue matching, clarification handling, and draft order generation.
 - **Phase 3.1 (Complete)**: Unit Conversion & Pricing Audit – dimensional unit compatibility, sealed pack count calculation, and safe price conversions.
-- **Phases 4–6 (Upcoming)**: Gnani AI Prisma (ASR), entity extraction fine-tuning, Gnani AI Timbre (TTS), and shopkeeper packing slips.
+- **Phase 4 (Complete)**: Gnani Prisma Speech-to-Text Integration – browser microphone intake, multer streaming, Gnani Prisma v3 REST ASR API integration, error mapping, and end-to-end voice-to-draft order pipeline.
+- **Phases 5–6 (Upcoming)**: Gnani AI Timbre (TTS) order confirmation and shopkeeper dashboard with packing slips.
 
 ---
 
@@ -326,11 +327,71 @@ Content-Type: application/json
 }
 ```
 
-### 2. Application Health Check (`GET /api/health`)
+### 2. Speech-to-Text & Voice Order Intake (`POST /api/speech/transcribe`)
+
+Converts customer spoken audio into text via **Gnani Prisma v3 REST API** (`https://api.vachana.ai/stt/v3`) and automatically feeds the transcript into the Order Understanding Engine.
+
+#### Request Format
+- **Content-Type**: `multipart/form-data`
+- **Fields**:
+  - `audio_file` (or `audio`): Binary audio file (WebM, WAV, MP3, OGG, AAC, MP4, M4A, FLAC). Max size 10MB.
+  - `language_code` *(optional)*: Language model code (default `indic-auto`, also supports `hi-IN`, `en-IN`).
+
+#### Response Example (`200 OK`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "transcript": "500 gram sugar aur 1 litre sunflower oil",
+    "audio": {
+      "requestId": "req_67890_abc",
+      "detectedLanguage": "indic-auto",
+      "model": "prisma-v3.0",
+      "processingTime": 0.42
+    },
+    "items": [
+      {
+        "originalText": "500 gram sugar",
+        "productId": "7e3b97b1-...",
+        "productName": "Sugar",
+        "matchedCatalogName": "Sugar",
+        "quantity": "500",
+        "unit": "g",
+        "catalogUnit": "kg",
+        "unitPrice": "45.00",
+        "lineTotal": "22.50",
+        "status": "MATCHED",
+        "confidence": 0.92
+      },
+      {
+        "originalText": "1 litre sunflower oil",
+        "productId": "b7390887-...",
+        "productName": "Fortune Sunflower Oil",
+        "matchedCatalogName": "Fortune Sunflower Oil",
+        "quantity": "1",
+        "unit": "litre",
+        "catalogUnit": "litre",
+        "unitPrice": "150.00",
+        "lineTotal": "150.00",
+        "status": "MATCHED",
+        "confidence": 0.92
+      }
+    ],
+    "subtotal": "172.50",
+    "needsClarification": false,
+    "clarificationQuestions": []
+  }
+}
+```
+
+*Note: Draft orders are returned in-memory and are NOT persisted to the PostgreSQL database.*
+
+### 3. Application Health Check (`GET /api/health`)
 - **Response** (`200 OK`): `{"success": true, "message": "CallSaar API is running"}`
 
-### 3. Database Health Check (`GET /api/health/db`)
+### 4. Database Health Check (`GET /api/health/db`)
 - **Response** (`200 OK`): `{"success": true, "database": "connected"}`
 
-### 4. Products Catalogue (`GET /api/products`)
+### 5. Products Catalogue (`GET /api/products`)
 - **Response** (`200 OK`): Lists active catalogue products.

@@ -10,7 +10,7 @@ import { parseOrderTranscript } from '../services/orderUnderstanding.service.js'
  */
 export const parseOrder = async (req, res, next) => {
   try {
-    const { transcript } = req.body;
+    const { transcript, store_id, storeId } = req.body;
 
     if (!transcript || typeof transcript !== 'string' || transcript.trim().length === 0) {
       return res.status(400).json({
@@ -19,7 +19,7 @@ export const parseOrder = async (req, res, next) => {
       });
     }
 
-    const draftOrder = await parseOrderTranscript(transcript);
+    const draftOrder = await parseOrderTranscript(transcript, { storeId: store_id || storeId });
 
     return res.status(200).json({
       success: true,

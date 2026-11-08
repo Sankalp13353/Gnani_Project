@@ -56,6 +56,38 @@ const BASE_CONVERSIONS = {
   boxes: { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
   bottle: { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
   bottles: { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+
+  // Devanagari Hindi units
+  // Weight
+  'किलो': { dimension: DIMENSIONS.WEIGHT, multiplier: 1000, baseUnit: 'g' },
+  'किलोग्राम': { dimension: DIMENSIONS.WEIGHT, multiplier: 1000, baseUnit: 'g' },
+  'किग्रा': { dimension: DIMENSIONS.WEIGHT, multiplier: 1000, baseUnit: 'g' },
+  'केजी': { dimension: DIMENSIONS.WEIGHT, multiplier: 1000, baseUnit: 'g' },
+  'केज़ी': { dimension: DIMENSIONS.WEIGHT, multiplier: 1000, baseUnit: 'g' },
+  'ग्राम': { dimension: DIMENSIONS.WEIGHT, multiplier: 1, baseUnit: 'g' },
+  'ग्रा': { dimension: DIMENSIONS.WEIGHT, multiplier: 1, baseUnit: 'g' },
+  'जीएम': { dimension: DIMENSIONS.WEIGHT, multiplier: 1, baseUnit: 'g' },
+
+  // Volume
+  'लीटर': { dimension: DIMENSIONS.VOLUME, multiplier: 1000, baseUnit: 'ml' },
+  'लिटर': { dimension: DIMENSIONS.VOLUME, multiplier: 1000, baseUnit: 'ml' },
+  'ली': { dimension: DIMENSIONS.VOLUME, multiplier: 1000, baseUnit: 'ml' },
+  'मिली': { dimension: DIMENSIONS.VOLUME, multiplier: 1, baseUnit: 'ml' },
+  'मिलीलीटर': { dimension: DIMENSIONS.VOLUME, multiplier: 1, baseUnit: 'ml' },
+  'एमएल': { dimension: DIMENSIONS.VOLUME, multiplier: 1, baseUnit: 'ml' },
+
+  // Packaging
+  'पैकेट': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'पैकेट्स': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'पैक': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'पाउच': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'पुड़िया': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'पीस': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'नग': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'डिब्बा': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'डब्बा': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'बॉक्स': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
+  'बोतल': { dimension: DIMENSIONS.COUNT, multiplier: 1, baseUnit: 'unit' },
 };
 
 /**
@@ -81,8 +113,8 @@ export const parseUnitDetails = (unitStr) => {
     };
   }
 
-  // 2. Pattern with numeric prefix: e.g. "500ml", "100g", "1kg", "200ml"
-  const prefixMatch = normalized.match(/^(\d+(?:\.\d+)?)\s*([a-zA-Z]+)$/);
+  // 2. Pattern with numeric prefix: e.g. "500ml", "100g", "1kg", "500मिली", "100ग्राम"
+  const prefixMatch = normalized.match(/^(\d+(?:\.\d+)?)\s*([\p{L}\p{M}]+)$/u);
   if (prefixMatch) {
     const [, numStr, unitPart] = prefixMatch;
     const info = BASE_CONVERSIONS[unitPart];

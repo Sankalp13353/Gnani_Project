@@ -4,7 +4,7 @@
  * Supports exact matching, token overlap, alias dictionary resolution, and Levenshtein similarity
  */
 
-import { findVocabularyMatch } from '../config/aliases.js';
+import { findVocabularyMatch, findBrandMatch } from '../config/aliases.js';
 
 /**
  * Calculates Levenshtein distance between two strings
@@ -148,8 +148,11 @@ export const matchProductInCatalogue = (productPhrase, catalogueProducts = []) =
       score = Math.max(score, nameSimilarity * 0.90);
     }
 
-    // Check brand similarity
-    if (prodBrand) {
+    // Check brand similarity (supporting English and Devanagari Hindi brand aliases)
+    const brandAlias = findBrandMatch(cleanQuery);
+    if (brandAlias && prodBrand === brandAlias) {
+      score = Math.max(score, 0.85);
+    } else if (prodBrand) {
       const brandSimilarity = calculateSimilarity(cleanQuery, prodBrand);
       if (brandSimilarity >= 0.80) {
         score = Math.max(score, brandSimilarity * 0.75);
