@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test test/orderUnderstanding.test.js test/speech.test.js test/multilingualOrder.test.js test/multiStoreDatabase.test.js",
+    "test": "node --test --test-concurrency=1 test/orderUnderstanding.test.js test/speech.test.js test/multilingualOrder.test.js test/multiStoreDatabase.test.js test/auth.test.js test/product.test.js test/import.test.js",
     "lint": "eslint src/ test/",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -18,10 +18,14 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "multer": "^2.5.0"
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.5.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "eslint": "^9.20.1",

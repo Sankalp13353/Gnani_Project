@@ -20,6 +20,10 @@ export const config = {
   gnaniLanguageCode: process.env.GNANI_LANGUAGE_CODE || 'indic-auto',
   gnaniTimeoutMs: process.env.GNANI_TIMEOUT_MS ? parseInt(process.env.GNANI_TIMEOUT_MS, 10) : 15000,
   maxAudioSizeBytes: process.env.MAX_AUDIO_SIZE_BYTES ? parseInt(process.env.MAX_AUDIO_SIZE_BYTES, 10) : 10 * 1024 * 1024,
+  // Authentication & Security configuration
+  jwtSecret: process.env.JWT_SECRET || 'callsaar_dev_jwt_secret_key_change_in_production',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  authCookieName: process.env.AUTH_COOKIE_NAME || 'callsaar_token',
   isDev: (process.env.NODE_ENV || 'development') === 'development',
   isProd: process.env.NODE_ENV === 'production'
 };

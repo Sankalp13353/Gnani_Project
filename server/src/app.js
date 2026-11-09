@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { config } from './config/env.js';
 import apiRoutes from './routes/index.js';
 import { notFoundHandler } from './middleware/notFound.middleware.js';
@@ -26,6 +27,9 @@ app.use(
     credentials: true
   })
 );
+
+// Middleware: Parse Cookie headers
+app.use(cookieParser());
 
 // Middleware: Parse JSON bodies
 app.use(express.json());

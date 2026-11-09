@@ -3,6 +3,7 @@ import healthRoutes from './health.routes.js';
 import productRoutes from './product.routes.js';
 import orderRoutes from './order.routes.js';
 import speechRoutes from './speech.routes.js';
+import authRoutes from './auth.routes.js';
 
 const router = Router();
 
@@ -11,5 +12,6 @@ router.use('/', healthRoutes);
 router.use('/', productRoutes);
 router.use('/', orderRoutes);
 router.use('/', speechRoutes);
+router.use('/auth', authRoutes);
 
 export default router;

@@ -11,9 +11,13 @@ import { sumDecimals, formatCurrency } from '../utils/decimal.js';
 import { calculateUnitConversion } from '../utils/unitConverter.js';
 import { logger } from '../utils/logger.js';
 
+export const DEFAULT_STORE_ID = '00000000-0000-0000-0000-000000000001';
+
 /**
  * Parses customer transcript and returns a structured draft order
  * @param {string} transcript - Raw text transcript from customer
+ * @param {object} [options]
+ * @param {string} [options.storeId] - Store ID to scope product catalogue lookup
  * @returns {Promise<object>} Draft order data structure
  */
 export const parseOrderTranscript = async (transcript, { storeId } = {}) => {
@@ -24,13 +28,14 @@ export const parseOrderTranscript = async (transcript, { storeId } = {}) => {
   }
 
   const rawTranscript = transcript.trim();
-  logger.info(`Processing order transcript: "${rawTranscript}"`);
+  const targetStoreId = storeId || DEFAULT_STORE_ID;
+  logger.info(`Processing order transcript: "${rawTranscript}" for store ${targetStoreId}`);
 
-  // 1. Fetch active products from the PostgreSQL catalogue (scoped to store if provided)
+  // 1. Fetch active products from the PostgreSQL catalogue (strictly scoped to target store)
   const catalogueProducts = await prisma.product.findMany({
     where: {
       isActive: true,
-      ...(storeId && { storeId }),
+      storeId: targetStoreId,
     },
     select: {
       id: true,
