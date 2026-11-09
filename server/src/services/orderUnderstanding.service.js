@@ -9,6 +9,7 @@ import { splitIntoItemSegments, parseItemSegment } from '../utils/quantityExtrac
 import { matchProductInCatalogue } from '../utils/productMatcher.js';
 import { sumDecimals, formatCurrency } from '../utils/decimal.js';
 import { calculateUnitConversion } from '../utils/unitConverter.js';
+import { isValidUuid } from '../utils/productValidation.js';
 import { logger } from '../utils/logger.js';
 
 export const DEFAULT_STORE_ID = '00000000-0000-0000-0000-000000000001';
@@ -18,9 +19,10 @@ export const DEFAULT_STORE_ID = '00000000-0000-0000-0000-000000000001';
  * @param {string} transcript - Raw text transcript from customer
  * @param {object} [options]
  * @param {string} [options.storeId] - Store ID to scope product catalogue lookup
+ * @param {boolean} [options.allowLegacyFallback] - Whether to allow DEFAULT_STORE_ID fallback for legacy linguistic tests
  * @returns {Promise<object>} Draft order data structure
  */
-export const parseOrderTranscript = async (transcript, { storeId } = {}) => {
+export const parseOrderTranscript = async (transcript, { storeId, allowLegacyFallback = (storeId === undefined) } = {}) => {
   if (!transcript || typeof transcript !== 'string' || transcript.trim().length === 0) {
     const error = new Error('Transcript is required and must be a non-empty string');
     error.status = 400;
@@ -28,13 +30,52 @@ export const parseOrderTranscript = async (transcript, { storeId } = {}) => {
   }
 
   const rawTranscript = transcript.trim();
-  const targetStoreId = storeId || DEFAULT_STORE_ID;
-  logger.info(`Processing order transcript: "${rawTranscript}" for store ${targetStoreId}`);
+  let targetStoreId;
 
-  // 1. Fetch active products from the PostgreSQL catalogue (strictly scoped to target store)
+  // Case 1: storeId is missing
+  if (!storeId) {
+    if (allowLegacyFallback) {
+      targetStoreId = DEFAULT_STORE_ID;
+      logger.info(`Processing order transcript with legacy fallback store ${targetStoreId}`);
+    } else {
+      const error = new Error('Store ID is required');
+      error.status = 400;
+      throw error;
+    }
+  } else {
+    // Case 2: storeId is provided - strictly validate UUID, existence, and open status
+    if (!isValidUuid(storeId)) {
+      const error = new Error('Invalid store ID format');
+      error.status = 400;
+      throw error;
+    }
+
+    const store = await prisma.store.findUnique({
+      where: { id: storeId },
+      select: { id: true, name: true, isOpen: true },
+    });
+
+    if (!store) {
+      const error = new Error('Store not found');
+      error.status = 404;
+      throw error;
+    }
+
+    if (!store.isOpen) {
+      const error = new Error('Store is currently closed for orders');
+      error.status = 400;
+      throw error;
+    }
+
+    targetStoreId = store.id;
+    logger.info(`Processing order transcript: "${rawTranscript}" for verified store "${store.name}" (${targetStoreId})`);
+  }
+
+  // 1. Fetch active and available products from the PostgreSQL catalogue (strictly scoped to target store)
   const catalogueProducts = await prisma.product.findMany({
     where: {
       isActive: true,
+      isAvailable: true,
       storeId: targetStoreId,
     },
     select: {
@@ -215,7 +256,9 @@ export const parseOrderTranscript = async (transcript, { storeId } = {}) => {
 
   return {
     transcript: rawTranscript,
+    storeId: targetStoreId,
     items: parsedItems,
+    unresolvedItems: parsedItems.filter((item) => item.status !== 'MATCHED'),
     subtotal,
     needsClarification,
     clarificationQuestions,

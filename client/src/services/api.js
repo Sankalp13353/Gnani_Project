@@ -33,12 +33,22 @@ export const checkDatabaseHealth = async () => {
  * @param {Blob} audioBlob - Binary audio blob from browser MediaRecorder
  * @param {string} filename - Filename (e.g. 'recording.wav')
  * @param {string} [languageCode] - Optional language code override
+ * @param {string} [storeId] - Optional store UUID to scope catalogue matching
  */
-export const transcribeVoiceOrder = async (audioBlob, filename = 'recording.wav', languageCode = 'indic-auto') => {
+export const transcribeVoiceOrder = async (
+  audioBlob,
+  filename = 'recording.wav',
+  languageCode = 'indic-auto',
+  storeId = null
+) => {
   const formData = new FormData();
   formData.append('audio_file', audioBlob, filename);
   if (languageCode) {
     formData.append('language_code', languageCode);
+  }
+  if (storeId) {
+    formData.append('store_id', storeId);
+    formData.append('storeId', storeId);
   }
 
   const response = await apiClient.post('/speech/transcribe', formData, {
@@ -53,9 +63,58 @@ export const transcribeVoiceOrder = async (audioBlob, filename = 'recording.wav'
  * Parse text transcript into a structured draft order
  * POST /api/orders/parse
  * @param {string} transcript - Text transcript
+ * @param {string} [storeId] - Store UUID
  */
-export const parseOrderTranscript = async (transcript) => {
-  const response = await apiClient.post('/orders/parse', { transcript });
+export const parseOrderTranscript = async (transcript, storeId = null) => {
+  const payload = { transcript };
+  if (storeId) {
+    payload.storeId = storeId;
+    payload.store_id = storeId;
+  }
+  const response = await apiClient.post('/orders/parse', payload);
+  return response.data;
+};
+
+/**
+ * Calculate and verify order items and pricing against a store's live catalogue
+ * POST /api/orders/calculate
+ * @param {object} params - { storeId, items }
+ */
+export const calculateOrderPricing = async ({ storeId, items }) => {
+  const response = await apiClient.post('/orders/calculate', { storeId, items });
+  return response.data;
+};
+
+/**
+ * Submit a customer order for in-store pickup
+ * POST /api/orders
+ * @param {object} orderData - { storeId, customerName, customerPhone, notes, items, idempotencyKey, confirmationToken }
+ */
+export const submitCustomerOrder = async (orderData) => {
+  const headers = {};
+  if (orderData.idempotencyKey) {
+    headers['Idempotency-Key'] = orderData.idempotencyKey;
+  }
+  if (orderData.confirmationToken) {
+    headers['X-Confirmation-Token'] = orderData.confirmationToken;
+  }
+  const response = await apiClient.post('/orders', orderData, { headers });
+  return response.data;
+};
+
+/**
+ * Retrieve public order details for confirmation page
+ * GET /api/orders/:id
+ * Securely transmits customer confirmation access token via header (never query string).
+ * @param {string} orderId
+ * @param {string} [token] - Optional confirmation access token
+ */
+export const fetchOrderById = async (orderId, token = null) => {
+  const headers = {};
+  if (token && typeof token === 'string' && token.trim().length > 0) {
+    headers['X-Confirmation-Token'] = token.trim();
+  }
+  const response = await apiClient.get(`/orders/${orderId}`, { headers });
   return response.data;
 };
 
@@ -198,6 +257,152 @@ export const confirmProductImport = async ({ importToken, duplicatePolicy = 'ski
     importToken,
     duplicatePolicy,
   });
+  return response.data;
+};
+
+// ============================================================================
+// Public Customer Store Discovery & Catalogue API (Phase D)
+// ============================================================================
+
+/**
+ * Discover public stores with search, city/pincode filtering, and pagination
+ * GET /api/stores
+ * @param {object} params - { search, city, pincode, isOpen, page, limit }
+ */
+export const fetchPublicStores = async (params = {}) => {
+  const response = await apiClient.get('/stores', { params });
+  return response.data;
+};
+
+/**
+ * Retrieve public details for a single store
+ * GET /api/stores/:storeId
+ * @param {string} storeId
+ */
+export const fetchPublicStoreById = async (storeId) => {
+  const response = await apiClient.get(`/stores/${storeId}`);
+  return response.data;
+};
+
+/**
+ * Retrieve public available catalogue strictly for a single store
+ * GET /api/stores/:storeId/catalogue
+ * @param {string} storeId
+ * @param {object} params - { search, category, page, limit }
+ */
+export const fetchPublicStoreCatalogue = async (storeId, params = {}) => {
+  const response = await apiClient.get(`/stores/${storeId}/catalogue`, { params });
+  return response.data;
+};
+
+// ============================================================================
+// Merchant Order Management API (Phase F)
+// ============================================================================
+
+/**
+ * List orders for the authenticated store with optional status, search, and pagination
+ * GET /api/merchant/orders
+ * @param {object} params - { status, search, page, limit }
+ */
+export const fetchMerchantOrders = async (params = {}) => {
+  const response = await apiClient.get('/merchant/orders', { params });
+  return response.data;
+};
+
+/**
+ * Retrieve order count summary breakdown by status
+ * GET /api/merchant/orders/summary
+ */
+export const fetchMerchantOrderSummary = async () => {
+  const response = await apiClient.get('/merchant/orders/summary');
+  return response.data;
+};
+
+/**
+ * Retrieve full order details for the authenticated merchant
+ * GET /api/merchant/orders/:orderId
+ * @param {string} orderId
+ */
+export const fetchMerchantOrderById = async (orderId) => {
+  const response = await apiClient.get(`/merchant/orders/${orderId}`);
+  return response.data;
+};
+
+/**
+ * Accept a pending order
+ * PATCH /api/merchant/orders/:orderId/accept
+ * @param {string} orderId
+ */
+export const acceptMerchantOrder = async (orderId) => {
+  const response = await apiClient.patch(`/merchant/orders/${orderId}/accept`);
+  return response.data;
+};
+
+/**
+ * Reject a pending order with a reason
+ * PATCH /api/merchant/orders/:orderId/reject
+ * @param {string} orderId
+ * @param {string} rejectionReason
+ */
+export const rejectMerchantOrder = async (orderId, rejectionReason) => {
+  const response = await apiClient.patch(`/merchant/orders/${orderId}/reject`, {
+    rejectionReason,
+  });
+  return response.data;
+};
+
+/**
+ * Start preparing an accepted order
+ * PATCH /api/merchant/orders/:orderId/prepare
+ * @param {string} orderId
+ */
+export const prepareMerchantOrder = async (orderId) => {
+  const response = await apiClient.patch(`/merchant/orders/${orderId}/prepare`);
+  return response.data;
+};
+
+/**
+ * Mark order packed and ready for pickup
+ * PATCH /api/merchant/orders/:orderId/ready
+ * @param {string} orderId
+ */
+export const markMerchantOrderReady = async (orderId) => {
+  const response = await apiClient.patch(`/merchant/orders/${orderId}/ready`);
+  return response.data;
+};
+
+/**
+ * Record in-store payment
+ * PATCH /api/merchant/orders/:orderId/payment
+ * @param {string} orderId
+ * @param {string} paymentMethod - 'CASH_ON_PICKUP' | 'UPI_AT_STORE'
+ */
+export const recordMerchantOrderPayment = async (orderId, paymentMethod) => {
+  const response = await apiClient.patch(`/merchant/orders/${orderId}/payment`, {
+    paymentMethod,
+  });
+  return response.data;
+};
+
+/**
+ * Complete order after collection and confirmed payment
+ * PATCH /api/merchant/orders/:orderId/complete
+ * @param {string} orderId
+ * @param {string} [paymentMethod]
+ */
+export const completeMerchantOrder = async (orderId, paymentMethod = null) => {
+  const payload = paymentMethod ? { paymentMethod } : {};
+  const response = await apiClient.patch(`/merchant/orders/${orderId}/complete`, payload);
+  return response.data;
+};
+
+/**
+ * Retrieve printable packing slip for an accepted order
+ * GET /api/merchant/orders/:orderId/packing-slip
+ * @param {string} orderId
+ */
+export const fetchPackingSlip = async (orderId) => {
+  const response = await apiClient.get(`/merchant/orders/${orderId}/packing-slip`);
   return response.data;
 };
 

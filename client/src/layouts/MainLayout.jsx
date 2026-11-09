@@ -1,13 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Mic2, Store, LogOut, LayoutDashboard, User } from 'lucide-react';
+import { Mic2, Store, LogOut, LayoutDashboard, User, MapPin, ClipboardList } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useCustomerStore } from '../context/StoreContext.jsx';
 
 export const MainLayout = ({ children }) => {
   const { store, isAuthenticated, logout } = useAuth();
+  const { selectedStore } = useCustomerStore();
   const location = useLocation();
 
   const isMerchantRoute = location.pathname.startsWith('/merchant');
+  const isStoresRoute = location.pathname.startsWith('/stores');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -31,23 +34,50 @@ export const MainLayout = ({ children }) => {
           </Link>
 
           {/* Navigation Links */}
-          <div className="flex items-center gap-3">
-            <Link
-              to="/"
-              className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                !isMerchantRoute
-                  ? 'bg-slate-100 text-slate-900 font-semibold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              Customer Voice Order
-            </Link>
+          <div className="flex items-center gap-2.5">
+            {/* Customer Navigation */}
+            <div className="flex items-center gap-1.5">
+              <Link
+                to="/"
+                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                  location.pathname === '/'
+                    ? 'bg-slate-100 text-slate-900 font-semibold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                Customer Voice Order
+              </Link>
 
+              <Link
+                to="/stores"
+                className={`inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                  isStoresRoute
+                    ? 'bg-slate-100 text-slate-900 font-semibold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                <Store className="w-3.5 h-3.5 text-blue-600" />
+                <span>Explore Stores</span>
+              </Link>
+
+              {selectedStore && !isMerchantRoute && (
+                <Link
+                  to={`/stores/${selectedStore.id}`}
+                  className="hidden md:inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                  title="View Selected Store Catalogue"
+                >
+                  <MapPin className="w-3 h-3 text-blue-500" />
+                  <span className="truncate max-w-[120px] font-semibold">{selectedStore.name}</span>
+                </Link>
+              )}
+            </div>
+
+            {/* Merchant Portal Navigation */}
             {isAuthenticated ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
                 <Link
                   to="/merchant/dashboard"
-                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
                     location.pathname === '/merchant/dashboard'
                       ? 'bg-blue-50 text-blue-700 border border-blue-200'
                       : 'text-slate-700 hover:bg-slate-100'
@@ -57,15 +87,26 @@ export const MainLayout = ({ children }) => {
                   <span className="font-semibold">{store?.name || 'My Store'}</span>
                 </Link>
                 <Link
+                  to="/merchant/orders"
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
+                    location.pathname === '/merchant/orders'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <ClipboardList className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="font-semibold">Orders</span>
+                </Link>
+                <Link
                   to="/merchant/catalogue"
-                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
                     location.pathname === '/merchant/catalogue'
                       ? 'bg-blue-50 text-blue-700 border border-blue-200'
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   <Store className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Catalogue</span>
+                  <span className="hidden sm:inline">Catalogue</span>
                 </Link>
                 <button
                   onClick={logout}
@@ -76,10 +117,10 @@ export const MainLayout = ({ children }) => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
                 <Link
                   to="/merchant/login"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
                 >
                   <User className="w-3.5 h-3.5" />
                   <span>Shopkeeper Login</span>

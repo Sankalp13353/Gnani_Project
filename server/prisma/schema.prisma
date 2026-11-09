@@ -95,27 +95,31 @@ model Product {
 }
 
 model Order {
-  id              String        @id @default(uuid())
-  orderNumber     String        @unique
-  storeId         String
-  customerId      String
-  status          OrderStatus   @default(PENDING_APPROVAL)
-  paymentStatus   PaymentStatus @default(UNPAID)
-  paymentMethod   PaymentMethod @default(CASH_ON_PICKUP)
-  source          OrderSource   @default(VOICE)
-  subtotal        Decimal       @db.Decimal(10, 2)
-  notes           String?
-  rejectionReason String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  acceptedAt      DateTime?
-  readyAt         DateTime?
-  completedAt     DateTime?
+  id                    String        @id @default(uuid())
+  orderNumber           String        @unique
+  storeId               String
+  customerId            String
+  idempotencyKey        String?
+  payloadHash           String?
+  confirmationTokenHash String?
+  status                OrderStatus   @default(PENDING_APPROVAL)
+  paymentStatus         PaymentStatus @default(UNPAID)
+  paymentMethod         PaymentMethod @default(CASH_ON_PICKUP)
+  source                OrderSource   @default(VOICE)
+  subtotal              Decimal       @db.Decimal(10, 2)
+  notes                 String?
+  rejectionReason       String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  acceptedAt            DateTime?
+  readyAt               DateTime?
+  completedAt           DateTime?
 
-  store           Store         @relation(fields: [storeId], references: [id])
-  customer        Customer      @relation(fields: [customerId], references: [id])
-  items           OrderItem[]
+  store                 Store         @relation(fields: [storeId], references: [id])
+  customer              Customer      @relation(fields: [customerId], references: [id])
+  items                 OrderItem[]
 
+  @@unique([storeId, idempotencyKey])
   @@index([storeId, status])
   @@index([customerId])
   @@index([status])

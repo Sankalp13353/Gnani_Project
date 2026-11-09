@@ -1,5 +1,6 @@
 import React from 'react';
-import { Sparkles, Bot, Store } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Sparkles, Bot, Store, ArrowRight } from 'lucide-react';
 import { useHealthCheck } from '../hooks/useHealthCheck.js';
 import HealthStatusCard from '../components/HealthStatusCard.jsx';
 import OrderManagementPlaceholder from '../components/OrderManagementPlaceholder.jsx';
@@ -30,11 +31,15 @@ export const HomePage = () => {
             Enabling Kirana storekeepers to seamlessly accept, transcribe, and fulfill customer grocery orders in Hindi, English, and Hinglish.
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-white/10 text-xs text-slate-200">
-              <Store className="w-4 h-4 text-amber-400" />
-              <span>Target: Indian Kirana Stores</span>
-            </div>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Link
+              to="/stores"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors"
+            >
+              <Store className="w-4 h-4" />
+              <span>Browse Local Kirana Stores</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-white/10 text-xs text-slate-200">
               <Bot className="w-4 h-4 text-emerald-400" />
               <span>Gnani AI Prisma STT Active</span>

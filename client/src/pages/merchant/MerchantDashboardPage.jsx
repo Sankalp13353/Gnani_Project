@@ -58,11 +58,18 @@ export const MerchantDashboardPage = () => {
 
           <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
             <button
-              onClick={() => navigate('/merchant/catalogue')}
+              onClick={() => navigate('/merchant/orders')}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition-colors"
             >
+              <ClipboardList className="w-3.5 h-3.5" />
+              <span>Manage Orders</span>
+            </button>
+            <button
+              onClick={() => navigate('/merchant/catalogue')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors border border-white/10"
+            >
               <Package className="w-3.5 h-3.5" />
-              <span>Manage Catalogue</span>
+              <span>Catalogue</span>
             </button>
             <button
               onClick={() => navigate('/')}
@@ -168,28 +175,30 @@ export const MerchantDashboardPage = () => {
           </button>
         </div>
 
-        {/* Phase E Preview Card */}
-        <div className="bg-white rounded-xl border border-dashed border-slate-300 p-6 space-y-4 relative overflow-hidden">
+        {/* Phase F Active Card: Orders & Packing Slips */}
+        <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-6 space-y-4 relative overflow-hidden">
           <div className="flex items-start justify-between">
             <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700">
               <ClipboardList className="w-5 h-5" />
             </div>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full">
-              <Clock className="w-3 h-3" />
-              <span>Phase E</span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              <span>Phase F Active</span>
             </span>
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 text-base">Voice Order Approval & Packing Slip</h3>
+            <h3 className="font-bold text-slate-900 text-base">Order Management & Packing Slips</h3>
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-              Receive customer voice orders in real-time with PENDING_APPROVAL status. Review order items, accept or reject, and print packing slips for shop preparation.
+              Review customer voice orders in real-time. Accept or reject with reasons, print professional packing slips, track preparation, and complete in-store collections.
             </p>
           </div>
-          <ul className="text-xs text-slate-500 space-y-1.5 list-disc list-inside">
-            <li>Shopkeeper manual order acceptance workflow</li>
-            <li>A4/Thermal printable packing slip generation</li>
-            <li>Status transitions: PREPARING → READY_FOR_PICKUP → COMPLETED</li>
-          </ul>
+          <button
+            onClick={() => navigate('/merchant/orders')}
+            className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>Manage Orders & Queue</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
