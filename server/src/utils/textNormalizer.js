@@ -44,6 +44,8 @@ export const NUMBER_WORDS = {
   'उन्नीस': '19',
   'बीस': '20',
   'पच्चीस': '25',
+  'तीस': '30',
+  'चालीस': '40',
   'पचास': '50',
   'सौ': '100',
   'आधा': '0.5',
@@ -51,6 +53,34 @@ export const NUMBER_WORDS = {
   'ढाई': '2.5',
   'सवा': '1.25',
   'पौने': '0.75',
+
+  // --- Devanagari Transliterations of English Number Words ---
+  'वन': '1',
+  'टू': '2',
+  'थ्री': '3',
+  'फोर': '4',
+  'फाइव': '5',
+  'सिक्स': '6',
+  'सेवन': '7',
+  'एट': '8',
+  'नाइन': '9',
+  'टेन': '10',
+  'इलेवन': '11',
+  'ट्वेल्व': '12',
+  'ट्वेलव': '12',
+  'थर्टीन': '13',
+  'फोर्टीन': '14',
+  'फिफ्टीन': '15',
+  'सिक्सटीन': '16',
+  'सेवंटीन': '17',
+  'एइटीन': '18',
+  'नाइन्टीन': '19',
+  'ट्वेंटी': '20',
+  'थर्टी': '30',
+  'फोर्ट्टी': '40',
+  'फिफ्टी': '50',
+  'हंड्रेड': '100',
+  'हाफ': '0.5',
 
   // --- Roman Hindi Number Words & Fractions ---
   ek: '1',
@@ -89,6 +119,20 @@ export const NUMBER_WORDS = {
   eight: '8',
   nine: '9',
   ten: '10',
+  eleven: '11',
+  twelve: '12',
+  thirteen: '13',
+  fourteen: '14',
+  fifteen: '15',
+  sixteen: '16',
+  seventeen: '17',
+  eighteen: '18',
+  nineteen: '19',
+  twenty: '20',
+  thirty: '30',
+  forty: '40',
+  fifty: '50',
+  hundred: '100',
   half: '0.5',
 };
 
@@ -353,7 +397,156 @@ export const cleanConversationalFillers = (text) => {
 
   // Remove leading/trailing punctuation and extra whitespace
   return cleaned
-    .replace(/^[,.!?\-\\s।॥]+|[,.!?\-\\s।॥]+$/gu, '')
+    .replace(/^[-–—,.!?।॥\s]+|[-–—,.!?।॥\s]+$/gu, '')
     .replace(/\s+/g, ' ')
     .trim();
+};
+
+// Consonants mapping for Devanagari to Latin transliteration
+const DEVANAGARI_CONSONANTS = {
+  'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'ng',
+  'च': 'ch', 'छ': 'chh', 'ज': 'j', 'झ': 'jh', 'ञ': 'ny',
+  'ट': 't', 'ठ': 'th', 'ड': 'd', 'ढ': 'dh', 'ण': 'n',
+  'त': 't', 'थ': 'th', 'द': 'd', 'ध': 'dh', 'न': 'n',
+  'प': 'p', 'फ': 'ph', 'ब': 'b', 'भ': 'bh', 'म': 'm',
+  'य': 'y', 'र': 'r', 'ल': 'l', 'व': 'v',
+  'श': 'sh', 'ष': 'sh', 'स': 's', 'ह': 'h',
+  'क़': 'q', 'ख़': 'kh', 'ग़': 'gh', 'ज़': 'z', 'ड़': 'r', 'ढ़': 'rh', 'फ़': 'f',
+};
+
+const DEVANAGARI_VOWELS = {
+  'अ': 'a', 'आ': 'aa', 'इ': 'i', 'ई': 'ee', 'उ': 'u', 'ऊ': 'oo',
+  'ऋ': 'ri', 'ए': 'e', 'ऐ': 'ai', 'ओ': 'o', 'औ': 'au', 'ऑ': 'o', 'ॲ': 'a',
+};
+
+const DEVANAGARI_MATRAS = {
+  'ा': 'aa', 'ि': 'i', 'ी': 'ee', 'ु': 'u', 'ू': 'oo',
+  'ृ': 'ri', 'े': 'e', 'ै': 'ai', 'ो': 'o', 'ौ': 'au', 'ॉ': 'o', 'ॅ': 'a',
+};
+
+/**
+ * Transliterates Devanagari script into Latin (Roman) phonetic characters.
+ * Deterministic, reusable across any grocery or retail product.
+ * @param {string} text
+ * @returns {string}
+ */
+export const transliterateDevanagariToLatin = (text) => {
+  if (!text || typeof text !== 'string') return '';
+
+  let s = text
+    .replace(/ाय/g, 'aay')
+    .replace(/ाइ/g, 'aai')
+    .replace(/ॉ/g, 'o')
+    .replace(/ॅ/g, 'e');
+
+  let out = '';
+  const chars = [...s];
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    const next = chars[i + 1];
+
+    let c = ch;
+    if (next === '\u093c') {
+      c = ch + next;
+      i++;
+    }
+
+    if (DEVANAGARI_CONSONANTS[c]) {
+      out += DEVANAGARI_CONSONANTS[c];
+      const after = chars[i + 1];
+      const isEndOfWord = !after || /[\s,.\-!?;:।॥]/.test(after);
+
+      if (after === '्') {
+        i++;
+      } else if (after && DEVANAGARI_MATRAS[after]) {
+        out += DEVANAGARI_MATRAS[after];
+        i++;
+      } else if (isEndOfWord) {
+        // Final consonant of a word, schwa dropped
+      } else if (after && DEVANAGARI_CONSONANTS[after]) {
+        out += 'a';
+      } else if (/[a-zA-Z]/.test(after)) {
+        // Followed by Latin diphthong
+      } else {
+        out += 'a';
+      }
+    } else if (DEVANAGARI_VOWELS[ch]) {
+      out += DEVANAGARI_VOWELS[ch];
+    } else if (DEVANAGARI_MATRAS[ch]) {
+      out += DEVANAGARI_MATRAS[ch];
+    } else if (ch === 'ं' || ch === 'ँ') {
+      out += 'n';
+    } else if (ch === 'ः') {
+      out += 'h';
+    } else if (ch === '्') {
+      // halant
+    } else {
+      out += ch;
+    }
+  }
+
+  return out.replace(/\s+/g, ' ').trim();
+};
+
+/**
+ * Normalizes an individual word phonetically (plurals, consonants, vowels, silent letters).
+ * @param {string} w
+ * @returns {string}
+ */
+export const normalizePhoneticWord = (w) => {
+  if (!w) return '';
+  let word = w.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+
+  // 1. Plural reduction at word boundaries
+  if (word.endsWith('ies') && word.length > 4) word = word.slice(0, -3) + 'y';
+  else if (word.endsWith('es') && word.length > 4 && !word.endsWith('ees')) word = word.slice(0, -2);
+  else if (word.endsWith('s') && !word.endsWith('ss') && word.length > 3) word = word.slice(0, -1);
+
+  // 2. Consonant normalization
+  word = word
+    .replace(/ck/g, 'k')
+    .replace(/c(?=[eiy])/g, 's')
+    .replace(/c/g, 'k')
+    .replace(/q/g, 'k')
+    .replace(/ph/g, 'f')
+    .replace(/w/g, 'v');
+
+  // 3. Retail spelling normalizations (biscuit/biskit/biskut)
+  word = word
+    .replace(/bisc/g, 'bisk')
+    .replace(/biskui/g, 'biski')
+    .replace(/bisku/g, 'biski');
+
+  // 4. Diphthongs for brand words like Tiger: taaygar / taaigar / taygar -> tiger
+  word = word.replace(/^t(?:aay|aai|aaya|ay|ai)g/g, 'tig');
+
+  // 5. Vowel normalizations
+  word = word
+    .replace(/ee|ea|ey/g, 'i')
+    .replace(/oo|ou/g, 'u')
+    .replace(/aa/g, 'a')
+    .replace(/(?:ar|er)$/g, 'er');
+
+  // 6. Collapse duplicate consonants
+  word = word.replace(/([^aeiou])\1+/g, '$1');
+
+  return word;
+};
+
+/**
+ * Phonetically normalizes a phrase across Hindi (Devanagari), English, and Hinglish
+ * @param {string} text
+ * @returns {string}
+ */
+export const phoneticNormalize = (text) => {
+  if (!text) return '';
+  let latin = text;
+  if (/[\u0900-\u097F]/.test(text)) {
+    latin = transliterateDevanagariToLatin(text);
+  }
+  return latin
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map(normalizePhoneticWord)
+    .join(' ');
 };

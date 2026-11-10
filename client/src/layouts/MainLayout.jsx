@@ -1,16 +1,27 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Mic2, Store, LogOut, LayoutDashboard, User, MapPin, ClipboardList } from 'lucide-react';
+import {
+  Mic2,
+  Store,
+  LogOut,
+  LayoutDashboard,
+  User,
+  MapPin,
+  ClipboardList,
+  ShoppingBag,
+  Mic,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCustomerStore } from '../context/StoreContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
 
 export const MainLayout = ({ children }) => {
   const { store, isAuthenticated, logout } = useAuth();
   const { selectedStore } = useCustomerStore();
+  const { cartCount } = useCart();
   const location = useLocation();
 
   const isMerchantRoute = location.pathname.startsWith('/merchant');
-  const isStoresRoute = location.pathname.startsWith('/stores');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -26,7 +37,7 @@ export const MainLayout = ({ children }) => {
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg text-slate-900 tracking-tight">CallSaar</span>
                 <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
-                  v1.0-alpha
+                  v1.0
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">Retail AI Voice Assistant</p>
@@ -36,41 +47,83 @@ export const MainLayout = ({ children }) => {
           {/* Navigation Links */}
           <div className="flex items-center gap-2.5">
             {/* Customer Navigation */}
-            <div className="flex items-center gap-1.5">
-              <Link
-                to="/"
-                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                  location.pathname === '/'
-                    ? 'bg-slate-100 text-slate-900 font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                Customer Voice Order
-              </Link>
+            {!isMerchantRoute && (
+              <div className="flex items-center gap-2">
+                {!selectedStore ? (
+                  <Link
+                    to="/"
+                    className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                      location.pathname === '/' || location.pathname === '/stores'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Store className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Find Kirana Stores</span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    {/* Selected Store Indicator Pill */}
+                    <div className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-800 px-2.5 py-1 rounded-full text-xs font-medium border border-slate-200 transition-colors">
+                      <MapPin className="w-3 h-3 text-blue-600" />
+                      <span className="truncate max-w-[110px] sm:max-w-[150px] font-semibold">
+                        {selectedStore.name}
+                      </span>
+                      <Link
+                        to="/"
+                        className="text-[11px] text-blue-600 hover:text-blue-800 font-semibold ml-1 pl-1 border-l border-slate-300"
+                        title="Change Store"
+                      >
+                        Change
+                      </Link>
+                    </div>
 
-              <Link
-                to="/stores"
-                className={`inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                  isStoresRoute
-                    ? 'bg-slate-100 text-slate-900 font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Store className="w-3.5 h-3.5 text-blue-600" />
-                <span>Explore Stores</span>
-              </Link>
+                    {/* Store Catalogue Link */}
+                    <Link
+                      to={`/stores/${selectedStore.id}`}
+                      className={`hidden sm:inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                        location.pathname === `/stores/${selectedStore.id}`
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>Catalogue</span>
+                    </Link>
 
-              {selectedStore && !isMerchantRoute && (
-                <Link
-                  to={`/stores/${selectedStore.id}`}
-                  className="hidden md:inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
-                  title="View Selected Store Catalogue"
-                >
-                  <MapPin className="w-3 h-3 text-blue-500" />
-                  <span className="truncate max-w-[120px] font-semibold">{selectedStore.name}</span>
-                </Link>
-              )}
-            </div>
+                    {/* Voice Order Link */}
+                    <Link
+                      to={`/stores/${selectedStore.id}/order`}
+                      className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                        location.pathname === `/stores/${selectedStore.id}/order`
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Mic className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="hidden sm:inline">Voice Order</span>
+                    </Link>
+
+                    {/* Cart Link with Badge */}
+                    <Link
+                      to={`/stores/${selectedStore.id}/cart`}
+                      className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                        location.pathname === `/stores/${selectedStore.id}/cart`
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
+                      }`}
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>Cart</span>
+                      {cartCount > 0 && (
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-blue-500 text-white">
+                          {cartCount}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Merchant Portal Navigation */}
             {isAuthenticated ? (

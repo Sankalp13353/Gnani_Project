@@ -18,7 +18,7 @@ import {
   Minus,
   MapPin,
   ArrowLeft,
-  ChevronDown,
+  ArrowRight,
   Edit2,
   Check,
 } from 'lucide-react';
@@ -27,16 +27,32 @@ import {
   fetchPublicStoreCatalogue,
   transcribeVoiceOrder,
   parseOrderTranscript,
-  calculateOrderPricing,
   submitCustomerOrder,
 } from '../../services/api.js';
 import { useCustomerStore } from '../../context/StoreContext.jsx';
+import { useCart } from '../../context/CartContext.jsx';
 import { WavRecorder } from '../../utils/wavRecorder.js';
 
 export const StoreVoiceOrderPage = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
   const { selectStore } = useCustomerStore();
+  const {
+    cartItems,
+    cartSubtotal,
+    cartCount,
+    unresolvedItems,
+    clarifications,
+    isCalculatingPricing,
+    pricingError,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    addVoiceItems,
+    resolveUnresolvedItem,
+    removeUnresolvedItem,
+    setCartStore,
+  } = useCart();
 
   // Store metadata
   const [store, setStore] = useState(null);
@@ -57,13 +73,6 @@ export const StoreVoiceOrderPage = () => {
   const [isEditingTranscript, setIsEditingTranscript] = useState(false);
   const [editedTranscript, setEditedTranscript] = useState('');
   const [audioMeta, setAudioMeta] = useState(null);
-  const [unresolvedItems, setUnresolvedItems] = useState([]);
-  const [clarifications, setClarifications] = useState([]);
-
-  // Verified Cart items [{ productId, productName, quantity, unit, catalogUnit, unitPrice, lineTotal }]
-  const [cartItems, setCartItems] = useState([]);
-  const [cartSubtotal, setCartSubtotal] = useState('0.00');
-  const [isCalculatingPricing, setIsCalculatingPricing] = useState(false);
 
   // Customer Pickup details
   const [customerName, setCustomerName] = useState('');
@@ -84,55 +93,80 @@ export const StoreVoiceOrderPage = () => {
   const wavRecorderRef = useRef(null);
   const timerRef = useRef(null);
   const fileInputRef = useRef(null);
+  const activeStoreIdRef = useRef(storeId);
+  activeStoreIdRef.current = storeId;
 
   // 1. Fetch Store Details and Public Catalogue on load
-  useEffect(() => {
-    let isMounted = true;
-    const loadStoreAndCatalogue = async () => {
-      if (!storeId) return;
-      setStoreLoading(true);
-      setStoreError(null);
+  const loadStoreAndCatalogue = useCallback(async () => {
+    const targetStoreId = storeId;
+    if (!targetStoreId) {
+      setStoreError('No store ID provided. Please select an active store from the directory.');
+      setStoreLoading(false);
+      return;
+    }
 
-      try {
-        const storeRes = await fetchPublicStoreById(storeId);
-        if (!isMounted) return;
+    setStoreLoading(true);
+    setStoreError(null);
 
-        if (storeRes?.success && storeRes?.data) {
-          const s = storeRes.data;
-          setStore(s);
-          selectStore(s);
+    try {
+      const [storeRes, catRes] = await Promise.all([
+        fetchPublicStoreById(targetStoreId),
+        fetchPublicStoreCatalogue(targetStoreId, { limit: 100 }),
+      ]);
 
-          // Fetch catalogue items to allow customer to resolve unmatched products
-          const catRes = await fetchPublicStoreCatalogue(storeId, { limit: 100 });
-          if (catRes?.success && isMounted) {
-            setStoreCatalogue(catRes.data || []);
-          }
-        } else {
-          throw new Error(storeRes?.message || 'Store not found');
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        setStoreError(
-          err.response?.status === 404
-            ? 'Store not found. Please select an active store from the directory.'
-            : err.response?.data?.message || err.message || 'Error loading store'
-        );
-      } finally {
-        if (isMounted) setStoreLoading(false);
+      // Guard against stale asynchronous response if customer changed store
+      if (activeStoreIdRef.current !== targetStoreId) {
+        return;
       }
-    };
 
+      if (storeRes?.success && storeRes?.data) {
+        const s = storeRes.data;
+        setStore(s);
+        setStoreCatalogue(Array.isArray(catRes?.data) ? catRes.data : []);
+
+        // Synchronize store context and cart context safely
+        selectStore(s);
+        setCartStore(s);
+      } else {
+        throw new Error(storeRes?.message || 'Store not found');
+      }
+    } catch (err) {
+      if (activeStoreIdRef.current !== targetStoreId) {
+        return;
+      }
+      console.error('Error loading store or catalogue:', err);
+      const is404 = err.response?.status === 404;
+      setStoreError(
+        is404
+          ? 'Store not found. Please select an active store from the directory.'
+          : err.response?.data?.message || err.message || 'Error connecting to store catalogue'
+      );
+    } finally {
+      if (activeStoreIdRef.current === targetStoreId) {
+        setStoreLoading(false);
+      }
+    }
+  }, [storeId, selectStore, setCartStore]);
+
+  useEffect(() => {
+    activeStoreIdRef.current = storeId;
     loadStoreAndCatalogue();
+  }, [storeId, loadStoreAndCatalogue]);
 
+  // Clean up audio recorder resources on unmount
+  useEffect(() => {
     return () => {
-      isMounted = false;
       if (audioUrl) URL.revokeObjectURL(audioUrl);
       if (timerRef.current) clearInterval(timerRef.current);
       if (wavRecorderRef.current && wavRecorderRef.current.isRecording) {
         wavRecorderRef.current.stop();
       }
     };
-  }, [storeId, selectStore]);
+  }, [audioUrl]);
+
+  const handleRetry = () => {
+    loadStoreAndCatalogue();
+  };
 
   // Timer updater during active recording
   useEffect(() => {
@@ -153,38 +187,6 @@ export const StoreVoiceOrderPage = () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [recordingState]);
-
-  // Recalculate cart pricing with the backend whenever cartItems change
-  const recalculateCart = useCallback(
-    async (items) => {
-      if (!items || items.length === 0) {
-        setCartSubtotal('0.00');
-        return;
-      }
-
-      setIsCalculatingPricing(true);
-      try {
-        const calcRes = await calculateOrderPricing({
-          storeId,
-          items: items.map((i) => ({
-            productId: i.productId,
-            quantity: i.quantity,
-            unit: i.unit || i.catalogUnit,
-          })),
-        });
-
-        if (calcRes.success && calcRes.data) {
-          setCartItems(calcRes.data.items || []);
-          setCartSubtotal(calcRes.data.subtotal || '0.00');
-        }
-      } catch (err) {
-        console.error('Pricing calculation error:', err);
-      } finally {
-        setIsCalculatingPricing(false);
-      }
-    },
-    [storeId]
-  );
 
   // Audio recording handlers
   const startRecording = async () => {
@@ -273,15 +275,13 @@ export const StoreVoiceOrderPage = () => {
         setTranscript(data.transcript || '');
         setEditedTranscript(data.transcript || '');
         setAudioMeta(data.audio || null);
-        setClarifications(data.clarificationQuestions || []);
 
         // Filter matched items vs unresolved items
         const matched = (data.items || []).filter((item) => item.status === 'MATCHED' && item.productId);
         const unresolved = (data.items || []).filter((item) => item.status !== 'MATCHED' || !item.productId);
 
-        setCartItems(matched);
-        setCartSubtotal(data.subtotal || '0.00');
-        setUnresolvedItems(unresolved);
+        // Add to shared cart context
+        await addVoiceItems(matched, unresolved, data.clarificationQuestions || []);
         setRecordingState('recorded');
       } else {
         throw new Error(response.message || 'Failed to process voice order.');
@@ -306,15 +306,12 @@ export const StoreVoiceOrderPage = () => {
       if (response.success && response.data) {
         const data = response.data;
         setTranscript(data.transcript);
-        setClarifications(data.clarificationQuestions || []);
         setIsEditingTranscript(false);
 
         const matched = (data.items || []).filter((item) => item.status === 'MATCHED' && item.productId);
         const unresolved = (data.items || []).filter((item) => item.status !== 'MATCHED' || !item.productId);
 
-        setCartItems(matched);
-        setCartSubtotal(data.subtotal || '0.00');
-        setUnresolvedItems(unresolved);
+        await addVoiceItems(matched, unresolved, data.clarificationQuestions || []);
       } else {
         throw new Error(response.message || 'Failed to parse order text.');
       }
@@ -326,50 +323,6 @@ export const StoreVoiceOrderPage = () => {
     }
   };
 
-  // Cart item management
-  const updateItemQuantity = (index, delta) => {
-    const updated = [...cartItems];
-    const currentQty = parseFloat(updated[index].quantity) || 1;
-    const newQty = Math.max(1, currentQty + delta);
-    updated[index].quantity = String(newQty);
-    recalculateCart(updated);
-  };
-
-  const removeItem = (index) => {
-    const updated = cartItems.filter((_, idx) => idx !== index);
-    setCartItems(updated);
-    recalculateCart(updated);
-  };
-
-  // Resolve an unmatched item by selecting a catalogue product
-  const resolveItemWithCatalogueProduct = (unresolvedIdx, selectedProductId) => {
-    const selectedProd = storeCatalogue.find((p) => p.id === selectedProductId);
-    if (!selectedProd) return;
-
-    const unItem = unresolvedItems[unresolvedIdx];
-    const qty = unItem.quantity ? String(unItem.quantity) : '1';
-
-    const newItem = {
-      productId: selectedProd.id,
-      productName: selectedProd.name,
-      quantity: qty,
-      unit: selectedProd.unit,
-      catalogUnit: selectedProd.unit,
-      unitPrice: selectedProd.price,
-      lineTotal: (parseFloat(qty) * parseFloat(selectedProd.price)).toFixed(2),
-    };
-
-    const newCart = [...cartItems, newItem];
-    setCartItems(newCart);
-
-    // Remove from unresolved
-    const updatedUnresolved = unresolvedItems.filter((_, idx) => idx !== unresolvedIdx);
-    setUnresolvedItems(updatedUnresolved);
-
-    // Recalculate trusted pricing
-    recalculateCart(newCart);
-  };
-
   // Final Order Submission
   const handleConfirmOrder = async (e) => {
     e.preventDefault();
@@ -378,8 +331,18 @@ export const StoreVoiceOrderPage = () => {
       return;
     }
 
+    if (unresolvedItems.length > 0) {
+      setSubmissionError('Please resolve or dismiss all unmatched items before confirming your order.');
+      return;
+    }
+
     if (!store?.isOpen) {
       setSubmissionError('This store is currently closed and not accepting orders.');
+      return;
+    }
+
+    if (!customerName.trim() || customerPhone.trim().length !== 10) {
+      setSubmissionError('Please provide your name and a valid 10-digit mobile phone number.');
       return;
     }
 
@@ -391,8 +354,8 @@ export const StoreVoiceOrderPage = () => {
         storeId,
         idempotencyKey: idempotencyKeyRef.current,
         confirmationToken: confirmationSecretRef.current,
-        customerName: customerName.trim() || undefined,
-        customerPhone: customerPhone.trim() || undefined,
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim(),
         notes: notes.trim() || undefined,
         source: 'VOICE',
         items: cartItems.map((item) => ({
@@ -407,6 +370,10 @@ export const StoreVoiceOrderPage = () => {
       if (response.success && response.data) {
         const createdOrder = response.data;
         const token = createdOrder.confirmationToken || confirmationSecretRef.current;
+
+        // Clear cart
+        clearCart();
+
         // Navigate to confirmation page using URL fragment #token=... (never query string ?token=...)
         navigate(`/orders/${createdOrder.id}/confirmation${token ? `#token=${encodeURIComponent(token)}` : ''}`, {
           state: { order: createdOrder, token },
@@ -446,12 +413,20 @@ export const StoreVoiceOrderPage = () => {
         <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
           <AlertCircle className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-bold text-slate-800">Store Unavailable</h2>
+        <h2 className="text-xl font-bold text-slate-800">Connection Failed</h2>
         <p className="text-sm text-slate-600">{storeError || 'The requested store could not be found.'}</p>
-        <div className="pt-4">
+        <div className="pt-4 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm transition-colors shadow-sm"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Retry Connection</span>
+          </button>
           <Link
-            to="/stores"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm transition-colors"
+            to="/"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-sm transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Browse Available Stores</span>
@@ -480,7 +455,7 @@ export const StoreVoiceOrderPage = () => {
             <span>View Catalogue</span>
           </Link>
           <Link
-            to="/stores"
+            to="/"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium text-sm hover:bg-blue-700"
           >
             <span>Explore Other Stores</span>
@@ -490,16 +465,34 @@ export const StoreVoiceOrderPage = () => {
     );
   }
 
+  const isConfirmDisabled =
+    cartItems.length === 0 ||
+    unresolvedItems.length > 0 ||
+    !store.isOpen ||
+    isCalculatingPricing ||
+    Boolean(pricingError) ||
+    !customerName.trim() ||
+    customerPhone.trim().length !== 10 ||
+    isSubmitting;
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-16">
-      {/* Back button */}
-      <div>
+      {/* Back button and Cart link */}
+      <div className="flex items-center justify-between">
         <Link
           to={`/stores/${store.id}`}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to {store.name} Catalogue</span>
+        </Link>
+
+        <Link
+          to={`/stores/${store.id}/cart`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold border border-blue-200 transition-colors"
+        >
+          <ShoppingBag className="w-3.5 h-3.5 text-blue-600" />
+          <span>Review Cart ({cartCount})</span>
         </Link>
       </div>
 
@@ -527,6 +520,16 @@ export const StoreVoiceOrderPage = () => {
           </span>
         </div>
       </div>
+
+      {/* Empty Catalogue Warning (if store has no products) */}
+      {storeCatalogue.length === 0 && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          <span>
+            Notice: <strong>{store.name}</strong> has not listed any in-stock products in its catalogue yet. Spoken voice items will require manual selection once inventory is added.
+          </span>
+        </div>
+      )}
 
       {/* Section 1: Voice Intake Interface */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -781,8 +784,9 @@ export const StoreVoiceOrderPage = () => {
                   <select
                     defaultValue=""
                     onChange={(e) => {
-                      if (e.target.value) {
-                        resolveItemWithCatalogueProduct(idx, e.target.value);
+                      const prod = storeCatalogue.find((p) => p.id === e.target.value);
+                      if (prod) {
+                        resolveUnresolvedItem(idx, prod);
                       }
                     }}
                     className="p-1.5 rounded-lg border border-slate-300 text-xs text-slate-700 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
@@ -799,8 +803,8 @@ export const StoreVoiceOrderPage = () => {
 
                   <button
                     type="button"
-                    onClick={() => setUnresolvedItems(unresolvedItems.filter((_, i) => i !== idx))}
-                    className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"
+                    onClick={() => removeUnresolvedItem(idx)}
+                    className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition-colors"
                     title="Dismiss item"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -851,9 +855,9 @@ export const StoreVoiceOrderPage = () => {
                     <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
                       <button
                         type="button"
-                        onClick={() => updateItemQuantity(idx, -1)}
+                        onClick={() => updateQuantity(item.productId, -1)}
                         className="p-1.5 text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-40"
-                        disabled={parseFloat(item.quantity) <= 1 || isCalculatingPricing}
+                        disabled={isCalculatingPricing}
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
@@ -862,7 +866,7 @@ export const StoreVoiceOrderPage = () => {
                       </span>
                       <button
                         type="button"
-                        onClick={() => updateItemQuantity(idx, 1)}
+                        onClick={() => updateQuantity(item.productId, 1)}
                         className="p-1.5 text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-40"
                         disabled={isCalculatingPricing}
                       >
@@ -878,7 +882,7 @@ export const StoreVoiceOrderPage = () => {
                     {/* Delete button */}
                     <button
                       type="button"
-                      onClick={() => removeItem(idx)}
+                      onClick={() => removeFromCart(item.productId)}
                       className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Remove product"
                     >
@@ -892,7 +896,7 @@ export const StoreVoiceOrderPage = () => {
             <div className="py-8 text-center text-slate-500 text-sm">
               <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto mb-2" />
               <p className="font-medium text-slate-700">Your cart is currently empty.</p>
-              <p className="text-xs text-slate-400 mt-1">Speak an order above or select items to get started.</p>
+              <p className="text-xs text-slate-400 mt-1">Speak an order above or browse the catalogue to add items.</p>
             </div>
           )}
         </div>
@@ -901,9 +905,18 @@ export const StoreVoiceOrderPage = () => {
       {/* Section 4: Customer Details & Final Order Submission Form */}
       {cartItems.length > 0 && (
         <form onSubmit={handleConfirmOrder} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5">
-          <div>
-            <h3 className="text-base font-bold text-slate-800">In-Store Pickup Customer Details</h3>
-            <p className="text-xs text-slate-500">Provide your contact info so the shopkeeper can identify your order at pickup.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-slate-800">In-Store Pickup Customer Details</h3>
+              <p className="text-xs text-slate-500">Provide your contact info so the shopkeeper can identify your order at pickup.</p>
+            </div>
+            <Link
+              to={`/stores/${store.id}/cart`}
+              className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800"
+            >
+              <span>Full Cart Page</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -955,6 +968,14 @@ export const StoreVoiceOrderPage = () => {
             </span>
           </div>
 
+          {/* Pricing Error Alert */}
+          {pricingError && (
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{pricingError}</span>
+            </div>
+          )}
+
           {/* Submission Error */}
           {submissionError && (
             <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
@@ -972,8 +993,13 @@ export const StoreVoiceOrderPage = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting || cartItems.length === 0}
-              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              disabled={isConfirmDisabled}
+              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              title={
+                unresolvedItems.length > 0
+                  ? 'Resolve all unmatched voice items first'
+                  : 'Place order for in-store pickup'
+              }
             >
               {isSubmitting ? (
                 <>
@@ -995,4 +1021,3 @@ export const StoreVoiceOrderPage = () => {
 };
 
 export default StoreVoiceOrderPage;
-

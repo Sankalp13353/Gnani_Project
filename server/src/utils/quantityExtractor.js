@@ -253,7 +253,7 @@ const cleanProductPhrase = (phrase) => {
   cleaned = cleaned
     .replace(/^(?:का|के|की|ka|ke|ki|of)\s+/giu, '')
     .replace(/\s+(?:का|के|की|ka|ke|ki|of)$/giu, '')
-    .replace(/^[,.!?\-\\s।॥]+|[,.!?\-\\s।॥]+$/gu, '')
+    .replace(/^[-–—,.!?।॥\s]+|[-–—,.!?।॥\s]+$/gu, '')
     .trim();
   return cleaned.length > 0 ? cleaned : null;
 };

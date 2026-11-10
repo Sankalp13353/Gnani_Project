@@ -5,6 +5,10 @@
  */
 
 import { findVocabularyMatch, findBrandMatch } from '../config/aliases.js';
+import {
+  transliterateDevanagariToLatin,
+  phoneticNormalize,
+} from './textNormalizer.js';
 
 /**
  * Calculates Levenshtein distance between two strings
@@ -62,15 +66,15 @@ export const calculateSimilarity = (a, b) => {
  * @returns {number}
  */
 export const calculateTokenOverlap = (query, target) => {
-  const queryTokens = query.toLowerCase().split(/[\s-]+/).filter(t => t.length > 1);
-  const targetTokens = target.toLowerCase().split(/[\s-]+/).filter(t => t.length > 1);
+  const queryTokens = query.toLowerCase().split(/[\s-]+/).filter((t) => t.length > 1);
+  const targetTokens = target.toLowerCase().split(/[\s-]+/).filter((t) => t.length > 1);
 
   if (queryTokens.length === 0 || targetTokens.length === 0) return 0;
 
   let matchCount = 0;
   for (const qToken of queryTokens) {
     // Check exact token or very close spelling in target tokens
-    const found = targetTokens.some(tToken => {
+    const found = targetTokens.some((tToken) => {
       if (qToken === tToken) return true;
       if (calculateSimilarity(qToken, tToken) >= 0.80) return true;
       return false;
@@ -88,7 +92,7 @@ export const calculateTokenOverlap = (query, target) => {
  * @returns {object} { status: 'MATCHED'|'AMBIGUOUS'|'UNMATCHED', product, confidence, candidates, defaultUnit }
  */
 export const matchProductInCatalogue = (productPhrase, catalogueProducts = []) => {
-  if (!productPhrase || catalogueProducts.length === 0) {
+  if (!productPhrase || !Array.isArray(catalogueProducts) || catalogueProducts.length === 0) {
     return {
       status: 'UNMATCHED',
       product: null,
@@ -99,64 +103,170 @@ export const matchProductInCatalogue = (productPhrase, catalogueProducts = []) =
   }
 
   const cleanQuery = productPhrase.toLowerCase().trim();
-  const aliasMatch = findVocabularyMatch(cleanQuery);
+  const latinQuery = /[\u0900-\u097F]/.test(cleanQuery)
+    ? transliterateDevanagariToLatin(cleanQuery)
+    : cleanQuery;
+  const phoneticQuery = phoneticNormalize(cleanQuery);
+  const phoneticTokens = phoneticQuery.split(/\s+/).filter(Boolean);
+
+  // Check alias dictionary for colloquial query phrases
+  const aliasMatch = findVocabularyMatch(cleanQuery) || (latinQuery !== cleanQuery ? findVocabularyMatch(latinQuery) : null);
+  const brandAlias = findBrandMatch(cleanQuery) || (latinQuery !== cleanQuery ? findBrandMatch(latinQuery) : null);
 
   const scoredProducts = [];
 
   for (const product of catalogueProducts) {
+    // Strictly guard against inactive or out-of-stock catalogue items
+    if (product.isActive === false || product.isAvailable === false) {
+      continue;
+    }
+
     const prodName = product.name.toLowerCase();
     const prodBrand = (product.brand || '').toLowerCase();
-    const prodDesc = (product.description || '').toLowerCase();
     const prodCategory = (product.category || '').toLowerCase();
+    const prodDesc = (product.description || '').toLowerCase();
+
+    const prodNamePhonetic = phoneticNormalize(product.name);
+    const prodBrandPhonetic = phoneticNormalize(product.brand || '');
+    const prodPhoneticTokens = prodNamePhonetic.split(/\s+/).filter(Boolean);
+    const prodBrandPhoneticTokens = prodBrandPhonetic.split(/\s+/).filter(Boolean);
 
     let score = 0;
 
-    // 1. Exact match against product name
-    if (cleanQuery === prodName) {
+    // 1. Exact match against product name (raw, transliterated, or phonetic)
+    if (cleanQuery === prodName || latinQuery === prodName) {
       score = 1.0;
+    } else if (phoneticQuery === prodNamePhonetic) {
+      score = 0.96;
     }
-    // 2. Substring match
-    else if (prodName.includes(cleanQuery) || cleanQuery.includes(prodName)) {
-      score = 0.88;
+
+    // Helper for boundary-aware subphrase matching
+    const isWordSubphrase = (sub, full) => {
+      if (!sub || !full || sub.length < 2) return false;
+      const escaped = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`(^|\\s)${escaped}(\\s|$)`, 'iu').test(full);
+    };
+
+    // 2. Boundary-aware subphrase match
+    if (
+      isWordSubphrase(cleanQuery, prodName) ||
+      isWordSubphrase(prodName, cleanQuery) ||
+      isWordSubphrase(latinQuery, prodName) ||
+      isWordSubphrase(prodName, latinQuery)
+    ) {
+      score = Math.max(score, 0.88);
+    } else if (
+      isWordSubphrase(phoneticQuery, prodNamePhonetic) ||
+      isWordSubphrase(prodNamePhonetic, phoneticQuery)
+    ) {
+      score = Math.max(score, 0.86);
     }
-    // 3. Alias dictionary resolution
-    if (aliasMatch) {
-      const allTargetTermsMatch = aliasMatch.targetTerms.every(term =>
-        prodName.includes(term) || prodBrand.includes(term) || prodCategory.includes(term) || prodDesc.includes(term)
-      );
-      if (allTargetTermsMatch) {
-        score = Math.max(score, 0.92);
+
+    // 3. Phonetic Token Coverage and Overlap
+    if (phoneticTokens.length > 0 && prodPhoneticTokens.length > 0) {
+      let matchedQueryTokens = 0;
+      let matchedProdTokens = 0;
+
+      for (const qToken of phoneticTokens) {
+        const foundInName = prodPhoneticTokens.some((pToken) => {
+          if (qToken === pToken) return true;
+          if (calculateSimilarity(qToken, pToken) >= 0.80) return true;
+          return false;
+        });
+
+        if (foundInName) {
+          matchedQueryTokens++;
+          matchedProdTokens++;
+        } else if (prodBrandPhoneticTokens.length > 0) {
+          const foundInBrand = prodBrandPhoneticTokens.some((bToken) => {
+            if (qToken === bToken) return true;
+            if (calculateSimilarity(qToken, bToken) >= 0.80) return true;
+            return false;
+          });
+          if (foundInBrand) {
+            matchedQueryTokens++;
+          }
+        }
+      }
+
+      const queryCoverage = matchedQueryTokens / phoneticTokens.length;
+      const prodCoverage = matchedProdTokens / prodPhoneticTokens.length;
+
+      // If every token in the query matched this product or its brand
+      if (queryCoverage === 1.0) {
+        if (prodCoverage === 1.0) {
+          // Exact token equality across all product tokens (e.g. "tiger" + "biskit")
+          score = Math.max(score, 0.95);
+        } else {
+          // Query covered all product tokens partially or was a brand/sub-name
+          score = Math.max(score, 0.78 + (prodCoverage * 0.14));
+        }
+      } else if (phoneticTokens.length > 1 && queryCoverage < 1.0) {
+        // Multi-token query where a distinctive token was NOT found in this product
+        // (e.g. "tiger biscuit" query against "Parle-G Biscuits", or "oreo biscuit" against "Tiger Biscuit")
+        // Severely penalize so unmatched brand/product names do not get falsely matched
+        score = Math.max(score, queryCoverage * 0.40);
       } else {
-        const someTargetTermsMatch = aliasMatch.targetTerms.some(term =>
-          prodName.includes(term) || prodBrand.includes(term) || prodDesc.includes(term)
+        const partialScore = (queryCoverage * 0.60) + (prodCoverage * 0.25);
+        score = Math.max(score, partialScore);
+      }
+    }
+
+    // 4. Alias dictionary resolution
+    if (aliasMatch) {
+      const isDirectSynonymMatch = Boolean(
+        aliasMatch.synonyms.includes(cleanQuery) || aliasMatch.synonyms.includes(latinQuery)
+      );
+
+      const allTargetTermsMatch = aliasMatch.targetTerms.every((term) =>
+        prodName.includes(term) ||
+        prodBrand.includes(term) ||
+        prodCategory.includes(term) ||
+        prodDesc.includes(term)
+      );
+
+      if (allTargetTermsMatch) {
+        if (isDirectSynonymMatch) {
+          score = Math.max(score, 0.92);
+        } else if (score >= 0.70) {
+          score = Math.max(score, 0.92);
+        }
+      } else {
+        const someTargetTermsMatch = aliasMatch.targetTerms.some((term) =>
+          prodName.includes(term) ||
+          prodBrand.includes(term) ||
+          prodCategory.includes(term) ||
+          prodDesc.includes(term)
         );
-        if (someTargetTermsMatch) {
+        if (someTargetTermsMatch && isDirectSynonymMatch) {
           score = Math.max(score, 0.78);
         }
       }
     }
 
-    // 4. Token overlap score
-    const tokenScore = calculateTokenOverlap(cleanQuery, prodName);
-    if (tokenScore > 0) {
-      score = Math.max(score, tokenScore * 0.85);
-    }
-
-    // 5. Levenshtein fuzzy string similarity (useful for typos like "magi", "ashirvaad")
-    const nameSimilarity = calculateSimilarity(cleanQuery, prodName);
-    if (nameSimilarity >= 0.75) {
-      score = Math.max(score, nameSimilarity * 0.90);
-    }
-
-    // Check brand similarity (supporting English and Devanagari Hindi brand aliases)
-    const brandAlias = findBrandMatch(cleanQuery);
-    if (brandAlias && prodBrand === brandAlias) {
+    // 5. Brand similarity (supporting English and Devanagari Hindi brand aliases)
+    const effectiveBrand = brandAlias || findBrandMatch(cleanQuery) || findBrandMatch(latinQuery);
+    if (effectiveBrand && prodBrand === effectiveBrand) {
       score = Math.max(score, 0.85);
     } else if (prodBrand) {
-      const brandSimilarity = calculateSimilarity(cleanQuery, prodBrand);
-      if (brandSimilarity >= 0.80) {
-        score = Math.max(score, brandSimilarity * 0.75);
+      const brandSim = Math.max(
+        calculateSimilarity(cleanQuery, prodBrand),
+        calculateSimilarity(latinQuery, prodBrand),
+        calculateSimilarity(phoneticQuery, prodBrandPhonetic)
+      );
+      if (brandSim >= 0.80) {
+        score = Math.max(score, brandSim * 0.75);
       }
+    }
+
+    // 6. Levenshtein fuzzy string similarity across representations
+    const maxSim = Math.max(
+      calculateSimilarity(cleanQuery, prodName),
+      calculateSimilarity(latinQuery, prodName),
+      calculateSimilarity(phoneticQuery, prodNamePhonetic)
+    );
+    if (maxSim >= 0.75) {
+      score = Math.max(score, maxSim * 0.90);
     }
 
     if (score >= 0.65) {
@@ -186,13 +296,13 @@ export const matchProductInCatalogue = (productPhrase, catalogueProducts = []) =
   // Check for ambiguity: multiple candidates with close scores
   if (scoredProducts.length > 1) {
     const secondMatch = scoredProducts[1];
-    // If difference between top and second is very small (< 0.08) and both >= 0.70
+    // If difference between top and second is very small (<= 0.08) and both >= 0.70
     if (Math.abs(topMatch.score - secondMatch.score) <= 0.08 && secondMatch.score >= 0.70) {
       return {
         status: 'AMBIGUOUS',
         product: null,
         confidence: topMatch.score,
-        candidates: scoredProducts.slice(0, 3).map(c => c.product),
+        candidates: scoredProducts.slice(0, 3).map((c) => c.product),
         defaultUnit: aliasMatch?.defaultUnit || null,
       };
     }

@@ -17,10 +17,12 @@ import {
 } from 'lucide-react';
 import { fetchPublicStores } from '../../services/api.js';
 import { useCustomerStore } from '../../context/StoreContext.jsx';
+import { useCart } from '../../context/CartContext.jsx';
 
 export const StoreDiscoveryPage = () => {
   const navigate = useNavigate();
   const { selectedStoreId, selectStore } = useCustomerStore();
+  const { setCartStore } = useCart();
 
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,7 @@ export const StoreDiscoveryPage = () => {
 
   const handleSelectStore = (store) => {
     selectStore(store);
+    setCartStore(store);
     navigate(`/stores/${store.id}`);
   };
 
@@ -91,13 +94,13 @@ export const StoreDiscoveryPage = () => {
         <div className="max-w-2xl space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Phase D — Customer Store Discovery</span>
+            <span>AI Voice Commerce for Kirana Stores</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
             Discover Local Kirana Stores Near You
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Choose your preferred neighborhood Kirana store, browse daily grocery items, and prepare for voice-first ordering with instant store pickup.
+            Select your preferred neighborhood Kirana store to browse fresh grocery items, place voice orders in Hindi or English, and pick up in store.
           </p>
         </div>
       </div>
@@ -306,7 +309,7 @@ export const StoreDiscoveryPage = () => {
                     onClick={() => handleSelectStore(store)}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition-colors"
                   >
-                    <span>Browse Catalogue</span>
+                    <span>Explore Store</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

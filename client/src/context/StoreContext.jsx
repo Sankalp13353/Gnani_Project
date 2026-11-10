@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 const StoreContext = createContext(null);
 const STORAGE_KEY = 'callsaar_customer_selected_store';
@@ -13,13 +13,12 @@ export const StoreProvider = ({ children }) => {
     }
   });
 
-  const selectStore = (store) => {
+  const selectStore = useCallback((store) => {
     if (!store || !store.id) {
       clearStore();
       return;
     }
 
-    // Persist only safe public store attributes
     const safeStore = {
       id: store.id,
       name: store.name,
@@ -29,29 +28,49 @@ export const StoreProvider = ({ children }) => {
       isOpen: store.isOpen,
     };
 
-    setSelectedStoreState(safeStore);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(safeStore));
-    } catch {
-      // Ignore storage write issues
-    }
-  };
+    setSelectedStoreState((prev) => {
+      // Avoid re-rendering if store attributes are already identical
+      if (
+        prev &&
+        prev.id === safeStore.id &&
+        prev.name === safeStore.name &&
+        prev.isOpen === safeStore.isOpen &&
+        prev.address === safeStore.address &&
+        prev.city === safeStore.city &&
+        prev.pincode === safeStore.pincode
+      ) {
+        return prev;
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(safeStore));
+      } catch {
+        // Ignore storage write issues
+      }
+      return safeStore;
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const clearStore = () => {
-    setSelectedStoreState(null);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Ignore storage remove issues
-    }
-  };
+  const clearStore = useCallback(() => {
+    setSelectedStoreState((prev) => {
+      if (prev === null) return prev;
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Ignore storage remove issues
+      }
+      return null;
+    });
+  }, []);
 
-  const value = {
-    selectedStore,
-    selectedStoreId: selectedStore?.id || null,
-    selectStore,
-    clearStore,
-  };
+  const value = useMemo(
+    () => ({
+      selectedStore,
+      selectedStoreId: selectedStore?.id || null,
+      selectStore,
+      clearStore,
+    }),
+    [selectedStore, selectStore, clearStore]
+  );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 };
@@ -65,4 +84,3 @@ export const useCustomerStore = () => {
 };
 
 export default StoreContext;
-
