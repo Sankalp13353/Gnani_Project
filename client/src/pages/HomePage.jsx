@@ -16,11 +16,11 @@ export const HomePage = () => {
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-medium mb-4">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Voice Commerce for Kirana Stores</span>
+            <span>AI Voice Commerce for Local Stores</span>
           </div>
 
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-            CallSaar
+            OrderSaathi
           </h1>
 
           <p className="mt-3 text-lg md:text-xl text-slate-300 leading-relaxed font-normal">
@@ -28,7 +28,7 @@ export const HomePage = () => {
           </p>
 
           <p className="mt-3 text-sm text-slate-400 max-w-xl">
-            Enabling Kirana storekeepers to seamlessly accept, transcribe, and fulfill customer grocery orders in Hindi, English, and Hinglish.
+            A voice-first ordering platform that connects customers with local retail stores, allowing customers to discover products and place orders naturally using their voice in their preferred language.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -37,7 +37,7 @@ export const HomePage = () => {
               className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors"
             >
               <Store className="w-4 h-4" />
-              <span>Browse Local Kirana Stores</span>
+              <span>Browse Local Stores Near You</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-white/10 text-xs text-slate-200">

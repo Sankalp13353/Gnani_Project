@@ -251,7 +251,7 @@ export const parseOrderTranscript = async (transcript, { storeId, allowLegacyFal
 
   // If transcript contained no valid order items (e.g. only greeting like "bhaiya ji")
   if (parsedItems.length === 0 && candidateSegments.length > 0) {
-    clarificationQuestions.push('Could you please tell me what grocery items you would like to order?');
+    clarificationQuestions.push('Could you please tell me what items you would like to order?');
   }
 
   return {

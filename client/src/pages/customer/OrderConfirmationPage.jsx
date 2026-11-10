@@ -177,14 +177,14 @@ export const OrderConfirmationPage = () => {
           {order.status === 'PENDING_APPROVAL' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300">
               <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
-              <span>Status: Awaiting Shopkeeper Approval</span>
+              <span>Status: Awaiting Store Approval</span>
             </span>
           )}
 
           {order.status === 'ACCEPTED' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-300">
               <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-              <span>Status: Accepted by Shopkeeper</span>
+              <span>Status: Accepted by Store</span>
             </span>
           )}
 
@@ -239,7 +239,7 @@ export const OrderConfirmationPage = () => {
               <span>Order Review in Progress</span>
             </p>
             <p className="text-amber-800 leading-relaxed">
-              Your order has been forwarded to the shopkeeper with status <strong>PENDING APPROVAL</strong>. The shopkeeper will manually review and accept your order before packing items. Payment will be collected in-person via Cash or UPI when you arrive for pickup.
+              Your order has been forwarded to the store with status <strong>PENDING APPROVAL</strong>. The store owner will manually review and accept your order before packing items. Payment will be collected in-person via Cash or UPI when you arrive for pickup.
             </p>
           </div>
         )}
@@ -251,7 +251,7 @@ export const OrderConfirmationPage = () => {
               <span>Order Accepted by Store</span>
             </p>
             <p className="text-blue-800 leading-relaxed">
-              Good news! The shopkeeper has accepted your grocery order. Store staff will begin gathering and packing your items shortly.
+              Good news! The store has accepted your order. Store staff will begin gathering and packing your items shortly.
             </p>
           </div>
         )}
@@ -263,7 +263,7 @@ export const OrderConfirmationPage = () => {
               <span>Items Being Packed</span>
             </p>
             <p className="text-purple-800 leading-relaxed">
-              The shopkeeper is currently weighing and packing your items into store bags. We will update the status to <strong>READY FOR PICKUP</strong> as soon as packing is complete!
+              The store staff is currently packing your items into store bags. We will update the status to <strong>READY FOR PICKUP</strong> as soon as packing is complete!
             </p>
           </div>
         )}
@@ -287,7 +287,7 @@ export const OrderConfirmationPage = () => {
               <span>Order Completed</span>
             </p>
             <p className="text-slate-600 leading-relaxed">
-              This order was collected and marked completed. Thank you for supporting your local kirana store with CallSaar!
+              This order was collected and marked completed. Thank you for supporting your local store with OrderSaathi!
             </p>
           </div>
         )}

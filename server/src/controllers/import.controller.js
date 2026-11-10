@@ -11,7 +11,7 @@ import {
 export const downloadTemplate = (req, res) => {
   const csvContent = generateSampleCsvTemplate();
   res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="callsaar_product_import_template.csv"');
+  res.setHeader('Content-Disposition', 'attachment; filename="ordersaathi_product_import_template.csv"');
   return res.status(200).send(csvContent);
 };
 

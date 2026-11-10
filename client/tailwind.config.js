@@ -16,11 +16,11 @@ export default {
           800: '#1e40af',
           900: '#1e3a8a',
         },
-        kirana: {
+        store: {
           amber: '#f59e0b',
           emerald: '#10b981',
           slate: '#0f172a',
-        }
+        },
       }
     },
   },

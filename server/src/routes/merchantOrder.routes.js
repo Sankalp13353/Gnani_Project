@@ -1,6 +1,6 @@
 /**
  * Merchant Order Routes
- * Endpoints for shopkeeper order dashboard, status transitions, in-store payment, and packing slips.
+ * Endpoints for store owner order dashboard, status transitions, in-store payment, and packing slips.
  * All routes require valid merchant authentication.
  */
 

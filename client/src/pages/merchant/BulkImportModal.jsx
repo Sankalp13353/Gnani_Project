@@ -150,7 +150,7 @@ export const BulkImportModal = ({ isOpen, onClose, onSuccess }) => {
             <div>
               <h3 className="font-bold text-slate-900 text-base">Bulk Product Catalogue Import</h3>
               <p className="text-xs text-slate-500">
-                Upload grocery inventory in bulk using CSV or Excel (.xlsx)
+                Upload store inventory in bulk using CSV or Excel (.xlsx)
               </p>
             </div>
           </div>

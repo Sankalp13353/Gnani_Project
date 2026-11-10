@@ -9,7 +9,7 @@ import { authenticateMerchant } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// POST /api/auth/register - Register a new Kirana store
+// POST /api/auth/register - Register a new local store
 router.post('/register', register);
 
 // POST /api/auth/login - Authenticate merchant

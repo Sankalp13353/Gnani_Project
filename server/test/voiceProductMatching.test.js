@@ -1,5 +1,5 @@
 /**
- * CallSaar — Voice Product Matching & Multilingual Transliteration Test Suite
+ * OrderSaathi — Voice Product Matching & Multilingual Transliteration Test Suite
  *
  * Automated regression tests covering:
  * 1. "टेन टायगर बिस्किट" → Tiger Biscuit, quantity 10, lineTotal 200.00
@@ -20,7 +20,7 @@ import prisma, { disconnectPrisma } from '../src/config/prisma.js';
 import { parseOrderTranscript } from '../src/services/orderUnderstanding.service.js';
 import { calculateOrderPricing } from '../src/services/order.service.js';
 
-describe('CallSaar — Voice Product Matching & Multilingual Transliteration', () => {
+describe('OrderSaathi — Voice Product Matching & Multilingual Transliteration', () => {
   let store1; // Sharma's Kirana (Tiger Biscuit @ ₹20.00)
   let store2; // Verma Kirana (Tiger Biscuit @ ₹25.00, Parle-G Biscuits @ ₹10.00)
 

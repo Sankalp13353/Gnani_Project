@@ -1,5 +1,5 @@
 /**
- * Shopkeeper Authentication & Store Management Service
+ * Store Owner Authentication & Store Management Service
  * Handles password hashing, JWT creation, registration, and credential verification
  */
 
@@ -57,7 +57,7 @@ export const cleanPhoneNumber = (phone) => {
 };
 
 /**
- * Registers a new Kirana store with hashed merchant credentials
+ * Registers a new local store with hashed merchant credentials
  * @param {object} data
  * @returns {Promise<{ store: object, token: string }>}
  */

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { parseOrderTranscript } from '../src/services/orderUnderstanding.service.js';
 import prisma from '../src/config/prisma.js';
 
-describe('CallSaar Multilingual AI-Powered Order Understanding Engine', () => {
+describe('OrderSaathi Multilingual AI-Powered Order Understanding Engine', () => {
   after(async () => {
     await prisma.$disconnect();
   });

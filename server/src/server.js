@@ -6,7 +6,7 @@ import { disconnectPrisma } from './config/prisma.js';
 const PORT = config.port;
 
 const server = app.listen(PORT, () => {
-  logger.info(`CallSaar Server running in ${config.nodeEnv} mode on port ${PORT}`);
+  logger.info(`OrderSaathi Server running in ${config.nodeEnv} mode on port ${PORT}`);
   logger.info(`Health check available at http://localhost:${PORT}/api/health`);
   logger.info(`Database health check available at http://localhost:${PORT}/api/health/db`);
 });

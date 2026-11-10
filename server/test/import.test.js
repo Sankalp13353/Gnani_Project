@@ -7,7 +7,7 @@ import prisma from '../src/config/prisma.js';
 import { generateToken } from '../src/services/auth.service.js';
 import { importSessions } from '../src/services/import.service.js';
 
-describe('CallSaar Phase C2: CSV/Excel Bulk Product Import & Management', () => {
+describe('OrderSaathi Phase C2: CSV/Excel Bulk Product Import & Management', () => {
   let server;
   let baseUrl;
 

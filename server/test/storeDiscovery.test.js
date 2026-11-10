@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import app from '../src/app.js';
 import prisma from '../src/config/prisma.js';
 
-describe('CallSaar Phase D: Customer Store Discovery & Public Catalogue Browsing', () => {
+describe('OrderSaathi Phase D: Customer Store Discovery & Public Catalogue Browsing', () => {
   let server;
   let baseUrl;
 

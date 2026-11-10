@@ -12,7 +12,7 @@ import { transcribeAudio, extractErrorDetails } from '../src/services/gnaniPrism
 import { processVoiceOrder } from '../src/services/speech.service.js';
 import app from '../src/app.js';
 
-describe('CallSaar Phase 4: Gnani Prisma Speech-to-Text Integration', () => {
+describe('OrderSaathi Phase 4: Gnani Prisma Speech-to-Text Integration', () => {
   let server;
   let serverUrl;
   let originalApiKey;

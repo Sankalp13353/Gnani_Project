@@ -4,7 +4,7 @@ import prisma from '../src/config/prisma.js';
 import { createOrder, listOrders } from '../src/services/order.service.js';
 import { listActiveProducts } from '../src/services/product.service.js';
 
-describe('CallSaar Phase A: Multi-Store Database Architecture', () => {
+describe('OrderSaathi Phase A: Multi-Store Database Architecture', () => {
   const DEFAULT_STORE_ID = '00000000-0000-0000-0000-000000000001';
   const TEST_STORE_2_ID = '00000000-0000-0000-0000-000000000002';
   let testCustomer = null;
@@ -52,12 +52,12 @@ describe('CallSaar Phase A: Multi-Store Database Architecture', () => {
 
     assert.ok(store, 'Default store should exist');
     assert.equal(store.id, DEFAULT_STORE_ID);
-    assert.equal(store.name, 'CallSaar Kirana Store');
+    assert.equal(store.name, 'OrderSaathi Local Store');
     assert.equal(store.ownerName, 'Ramesh Kumar');
     assert.equal(store.phone, '9876543210');
     assert.equal(store.city, 'Bengaluru');
     assert.equal(store.pincode, '560001');
-    assert.equal(store.upiId, 'callsaar@upi');
+    assert.equal(store.upiId, 'ordersaathi@upi');
     assert.equal(store.isOpen, true);
     assert.ok(store.createdAt instanceof Date);
     assert.ok(store.updatedAt instanceof Date);

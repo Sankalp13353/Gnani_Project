@@ -27,7 +27,7 @@ export const useHealthCheck = () => {
       }
     } catch (err) {
       console.error('Health check failed:', err);
-      setError(err.message || 'Unable to connect to CallSaar API server');
+      setError(err.message || 'Unable to connect to OrderSaathi API server');
       setStatus(CONNECTION_STATUS.DISCONNECTED);
       setDbStatus('disconnected');
     } finally {

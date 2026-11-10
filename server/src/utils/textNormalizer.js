@@ -426,7 +426,7 @@ const DEVANAGARI_MATRAS = {
 
 /**
  * Transliterates Devanagari script into Latin (Roman) phonetic characters.
- * Deterministic, reusable across any grocery or retail product.
+ * Deterministic, reusable across any retail store product.
  * @param {string} text
  * @returns {string}
  */

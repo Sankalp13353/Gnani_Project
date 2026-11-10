@@ -1,5 +1,5 @@
 /**
- * Shopkeeper Authentication Controller
+ * Store Owner Authentication Controller
  * Handles registration, login, logout, and authenticated profile retrieval
  */
 
@@ -19,7 +19,7 @@ export const getAuthCookieOptions = () => ({
 
 /**
  * POST /api/auth/register
- * Registers a new Kirana store and merchant
+ * Registers a new local store and merchant
  */
 export const register = async (req, res, next) => {
   try {

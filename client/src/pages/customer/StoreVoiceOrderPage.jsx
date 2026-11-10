@@ -445,7 +445,7 @@ export const StoreVoiceOrderPage = () => {
         </div>
         <h2 className="text-xl font-bold text-slate-800">{store.name} is Currently Closed</h2>
         <p className="text-sm text-slate-600">
-          This store is not accepting voice orders right now. Please check back during store operating hours or choose another local kirana store.
+          This store is not accepting voice orders right now. Please check back during store operating hours or choose another local store.
         </p>
         <div className="pt-4 flex items-center justify-center gap-3">
           <Link
@@ -539,7 +539,7 @@ export const StoreVoiceOrderPage = () => {
               <Mic className="w-5 h-5" />
             </span>
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Speak Your Grocery Order</h2>
+              <h2 className="text-lg font-bold text-slate-800">Speak Your Order</h2>
               <p className="text-xs text-slate-500">Natural Hindi, English, or Hinglish via Gnani Prisma v3 STT</p>
             </div>
           </div>
@@ -908,7 +908,7 @@ export const StoreVoiceOrderPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-slate-800">In-Store Pickup Customer Details</h3>
-              <p className="text-xs text-slate-500">Provide your contact info so the shopkeeper can identify your order at pickup.</p>
+              <p className="text-xs text-slate-500">Provide your contact info so the store owner can identify your order at pickup.</p>
             </div>
             <Link
               to={`/stores/${store.id}/cart`}
@@ -961,7 +961,7 @@ export const StoreVoiceOrderPage = () => {
           <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between text-xs text-blue-900">
             <div>
               <span className="font-semibold block">Payment Terms:</span>
-              <span>Pay in-store during pickup via Cash or UPI at the shopkeeper&apos;s counter.</span>
+              <span>Pay in-store during pickup via Cash or UPI at the store counter.</span>
             </div>
             <span className="px-2.5 py-1 bg-white font-semibold rounded border border-blue-200 text-blue-800">
               CASH / UPI ON PICKUP

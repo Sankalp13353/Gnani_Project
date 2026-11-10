@@ -8,9 +8,9 @@ import {
 const router = Router();
 
 // Public Customer-Facing Store Discovery and Catalogue Endpoints
-// (No shopkeeper authentication required)
+// (No store owner authentication required)
 
-// GET /api/stores - Discover public kirana stores with search & location filters
+// GET /api/stores - Discover public local stores with search & location filters
 router.get('/', getStores);
 
 // GET /api/stores/:storeId - Retrieve public details for a single store

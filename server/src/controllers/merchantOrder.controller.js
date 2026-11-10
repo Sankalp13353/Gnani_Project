@@ -1,6 +1,6 @@
 /**
  * Merchant Order Controller
- * Exposes authenticated endpoints for shopkeeper order review, status transitions,
+ * Exposes authenticated endpoints for store owner order review, status transitions,
  * in-store payment recording, and packing slips.
  */
 
@@ -84,7 +84,7 @@ export const getOrder = async (req, res, next) => {
 
 /**
  * PATCH /api/merchant/orders/:orderId/accept
- * Shopkeeper accepts a pending order.
+ * Store owner accepts a pending order.
  */
 export const accept = async (req, res, next) => {
   try {
@@ -105,7 +105,7 @@ export const accept = async (req, res, next) => {
 
 /**
  * PATCH /api/merchant/orders/:orderId/reject
- * Shopkeeper rejects a pending order with a reason.
+ * Store owner rejects a pending order with a reason.
  */
 export const reject = async (req, res, next) => {
   try {
@@ -127,7 +127,7 @@ export const reject = async (req, res, next) => {
 
 /**
  * PATCH /api/merchant/orders/:orderId/prepare
- * Shopkeeper marks an accepted order as preparing.
+ * Store owner marks an accepted order as preparing.
  */
 export const prepare = async (req, res, next) => {
   try {
@@ -148,7 +148,7 @@ export const prepare = async (req, res, next) => {
 
 /**
  * PATCH /api/merchant/orders/:orderId/ready
- * Shopkeeper marks an order as packed and ready for pickup.
+ * Store owner marks an order as packed and ready for pickup.
  */
 export const markReady = async (req, res, next) => {
   try {

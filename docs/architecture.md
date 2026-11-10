@@ -1,8 +1,8 @@
-# CallSaar – Architecture & Order Understanding Engine (Phase 3)
+# OrderSaathi – Architecture & Order Understanding Engine (Phase 3)
 
 ## System Overview
 
-**CallSaar** is an AI-powered voice ordering and order management assistant tailored for Indian Kirana stores. It bridges natural spoken language (Hindi, English, Hinglish) with structured inventory and order fulfillment.
+**OrderSaathi** is a voice-first ordering platform that connects customers with local retail stores, allowing customers to discover products and place orders naturally using their voice in their preferred language.
 
 ### High-Level Roadmap
 - **Phase 1 (Complete)**: Foundation – Full-stack monorepo, Express backend, React + Vite frontend, health check, baseline styling & environment management.
@@ -11,7 +11,7 @@
 - **Phase 3.1 (Complete)**: Unit Conversion & Pricing Audit – Dimensional unit compatibility, sealed pack count calculation, and safe price conversions.
 - **Phase 4 (Complete)**: Speech-to-Text – Browser audio capture, Multer memory storage, Gnani AI Prisma v3 REST ASR API integration, and unified voice order processing pipeline.
 - **Phase 5 (Upcoming)**: Text-to-Speech & Confirmation – Gnani AI Timbre integration for voice playback and confirmation.
-- **Phase 6 (Upcoming)**: Dashboard & Packing Slips – Shopkeeper interface with order processing and printable receipt slips.
+- **Phase 6 (Upcoming)**: Dashboard & Packing Slips – Store owner interface with order processing and printable receipt slips.
 
 ---
 
@@ -117,7 +117,7 @@
 ## Directory Architecture
 
 ```
-CallSaar/
+OrderSaathi/
 ├── client/
 │   ├── public/
 │   ├── src/
@@ -140,7 +140,7 @@ CallSaar/
 │   │   └── seed.js
 │   ├── src/
 │   │   ├── config/
-│   │   │   ├── aliases.js             # Kirana product vocabulary & colloquial term mappings
+│   │   │   ├── aliases.js             # Retail product vocabulary & colloquial term mappings
 │   │   │   ├── env.js
 │   │   │   └── prisma.js
 │   │   ├── controllers/

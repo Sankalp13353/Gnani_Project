@@ -35,7 +35,7 @@ export const MainLayout = ({ children }) => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-lg text-slate-900 tracking-tight">CallSaar</span>
+                <span className="font-bold text-lg text-slate-900 tracking-tight">OrderSaathi</span>
                 <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
                   v1.0
                 </span>
@@ -59,7 +59,7 @@ export const MainLayout = ({ children }) => {
                     }`}
                   >
                     <Store className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Find Kirana Stores</span>
+                    <span>Find Local Stores</span>
                   </Link>
                 ) : (
                   <div className="flex items-center gap-1 sm:gap-2">
@@ -176,7 +176,7 @@ export const MainLayout = ({ children }) => {
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
                 >
                   <User className="w-3.5 h-3.5" />
-                  <span>Shopkeeper Login</span>
+                  <span>Store Owner Login</span>
                 </Link>
                 <Link
                   to="/merchant/register"
@@ -199,8 +199,8 @@ export const MainLayout = ({ children }) => {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-4 mt-auto">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} CallSaar. All rights reserved.</p>
-          <p>Built for Indian Kirana & Retail Automation</p>
+          <p>© {new Date().getFullYear()} OrderSaathi. All rights reserved.</p>
+          <p>Built for Local Retail Store Automation</p>
         </div>
       </footer>
     </div>

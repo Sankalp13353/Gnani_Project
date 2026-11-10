@@ -443,7 +443,7 @@ export const StoreCartReviewPage = () => {
               <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="font-bold text-slate-800 text-base">Your Cart is Empty</h3>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                You haven&apos;t added any grocery items yet. Browse {store.name}&apos;s catalogue or use
+                You haven&apos;t added any items yet. Browse {store.name}&apos;s catalogue or use
                 voice ordering to speak an order.
               </p>
               <div className="pt-2 flex items-center justify-center gap-3">
@@ -639,7 +639,7 @@ export const StoreCartReviewPage = () => {
               {isSubmitting ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Submitting to Shopkeeper...</span>
+                  <span>Submitting to Store...</span>
                 </>
               ) : (
                 <>

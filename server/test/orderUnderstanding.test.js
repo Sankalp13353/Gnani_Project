@@ -10,7 +10,7 @@ import { multiplyDecimals, addDecimals, sumDecimals } from '../src/utils/decimal
 import { parseUnitDetails } from '../src/utils/unitConverter.js';
 import { disconnectPrisma } from '../src/config/prisma.js';
 
-describe('CallSaar Order Understanding Engine (Phases 3 & 3.1)', () => {
+describe('OrderSaathi Order Understanding Engine (Phases 3 & 3.1)', () => {
   after(async () => {
     await disconnectPrisma();
   });

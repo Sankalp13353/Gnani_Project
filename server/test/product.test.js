@@ -5,7 +5,7 @@ import app from '../src/app.js';
 import prisma from '../src/config/prisma.js';
 import { generateToken } from '../src/services/auth.service.js';
 
-describe('CallSaar Phase C1: Store-Scoped Product Catalogue Backend', () => {
+describe('OrderSaathi Phase C1: Store-Scoped Product Catalogue Backend', () => {
   let server;
   let baseUrl;
 

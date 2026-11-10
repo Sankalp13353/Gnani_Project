@@ -7,7 +7,7 @@ import prisma from '../src/config/prisma.js';
 import { config } from '../src/config/env.js';
 import { generateToken } from '../src/services/auth.service.js';
 
-describe('CallSaar Phase B: Shopkeeper Authentication & Store Management', () => {
+describe('OrderSaathi Phase B: Shopkeeper Authentication & Store Management', () => {
   let server;
   let baseUrl;
   const TEST_PHONES = ['9100000001', '9100000002', '9100000003'];

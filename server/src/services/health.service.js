@@ -6,7 +6,7 @@ import prisma from '../config/prisma.js';
 export const getHealthStatus = () => {
   return {
     success: true,
-    message: 'CallSaar API is running',
+    message: 'OrderSaathi API is running',
   };
 };
 

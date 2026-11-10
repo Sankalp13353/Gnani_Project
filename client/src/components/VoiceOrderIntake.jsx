@@ -198,7 +198,7 @@ export const VoiceOrderIntake = () => {
             <h2 className="text-xl font-bold text-slate-800">Voice Order Intake</h2>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Speak grocery orders naturally in Hindi, English, or Hinglish via Gnani Prisma v3 STT.
+            Speak orders naturally in Hindi, English, or Hinglish via Gnani Prisma v3 STT.
           </p>
         </div>
 
@@ -461,7 +461,7 @@ export const VoiceOrderIntake = () => {
                 </div>
               ) : (
                 <div className="p-4 text-center text-sm text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
-                  No grocery items detected in transcript.
+                  No items detected in transcript.
                 </div>
               )}
             </div>

@@ -1,5 +1,5 @@
 /**
- * Lightweight structured console logger for CallSaar backend
+ * Lightweight structured console logger for OrderSaathi backend
  */
 export const logger = {
   info: (message, meta = '') => {

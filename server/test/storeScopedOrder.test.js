@@ -27,7 +27,7 @@ import app from '../src/app.js';
 import { parseOrderTranscript } from '../src/services/orderUnderstanding.service.js';
 import { calculateOrderPricing, createCustomerOrder } from '../src/services/order.service.js';
 
-describe('CallSaar Phase E: Store-Scoped Voice Ordering, Cart & Order Creation', () => {
+describe('OrderSaathi Phase E: Store-Scoped Voice Ordering, Cart & Order Creation', () => {
   let server;
   let serverUrl;
 

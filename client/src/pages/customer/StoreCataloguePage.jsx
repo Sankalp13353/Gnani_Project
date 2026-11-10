@@ -199,7 +199,7 @@ export const StoreCataloguePage = () => {
                   <Link
                     to={`/stores/${store.id}/order`}
                     className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-sm transition-colors"
-                    title="Speak grocery order for this store"
+                    title="Speak voice order for this store"
                   >
                     <Mic className="w-4 h-4" />
                     <span>Start Voice Order</span>

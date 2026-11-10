@@ -78,31 +78,31 @@ const sampleProducts = [
 ];
 
 async function seed() {
-  console.log('Seeding CallSaar multi-store database and catalogue...');
+  console.log('Seeding OrderSaathi multi-store database and catalogue...');
 
   // 1. Seed or update the default demo store
   const defaultStore = await prisma.store.upsert({
     where: { id: '00000000-0000-0000-0000-000000000001' },
     update: {
-      name: 'CallSaar Kirana Store',
+      name: 'OrderSaathi Local Store',
       ownerName: 'Ramesh Kumar',
       phone: '9876543210',
       address: 'Shop No. 4, Main Market, MG Road',
       city: 'Bengaluru',
       pincode: '560001',
-      upiId: 'callsaar@upi',
+      upiId: 'ordersaathi@upi',
       isOpen: true,
     },
     create: {
       id: '00000000-0000-0000-0000-000000000001',
-      name: 'CallSaar Kirana Store',
+      name: 'OrderSaathi Local Store',
       ownerName: 'Ramesh Kumar',
       phone: '9876543210',
       passwordHash: '$2b$10$placeholderForPhaseAImplementationOnly0000000000000',
       address: 'Shop No. 4, Main Market, MG Road',
       city: 'Bengaluru',
       pincode: '560001',
-      upiId: 'callsaar@upi',
+      upiId: 'ordersaathi@upi',
       isOpen: true,
     },
   });

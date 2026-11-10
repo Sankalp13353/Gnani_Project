@@ -1,6 +1,6 @@
 /**
  * Product Aliases and Colloquial Vocabulary Mapping
- * Maintains common Indian Kirana term equivalents in Hindi (Devanagari), English, and Hinglish.
+ * Maintains common Indian retail term equivalents in Hindi (Devanagari), English, and Hinglish.
  * Decoupled from core parsing logic so new vocabulary can be registered easily.
  */
 

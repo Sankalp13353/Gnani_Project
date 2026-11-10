@@ -71,9 +71,9 @@ export const MerchantLoginPage = () => {
             <Sparkles className="w-3.5 h-3.5" />
             <span>Merchant Portal</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Shopkeeper Login</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Store Owner Login</h1>
           <p className="text-sm text-slate-300 mt-1">
-            Access your Kirana store dashboard, catalogue, and voice orders.
+            Access your store dashboard, catalogue, and voice orders.
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export const MerchantLoginPage = () => {
           {/* Registration link */}
           <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col items-center gap-3 text-xs text-slate-600">
             <p>
-              New Kirana shopkeeper?{' '}
+              New store owner?{' '}
               <Link
                 to="/merchant/register"
                 className="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1"

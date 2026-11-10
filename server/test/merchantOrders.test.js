@@ -38,7 +38,7 @@ import prisma from '../src/config/prisma.js';
 import { generateToken } from '../src/services/auth.service.js';
 import { createCustomerOrder } from '../src/services/order.service.js';
 
-describe('CallSaar Phase F: Shopkeeper Order Management, Approval & Packing Slips', () => {
+describe('OrderSaathi Phase F: Shopkeeper Order Management, Approval & Packing Slips', () => {
   let server;
   let serverUrl;
   let storeA;
@@ -872,7 +872,7 @@ describe('CallSaar Phase F: Shopkeeper Order Management, Approval & Packing Slip
     const slip = body.data;
 
     // Check Branding
-    assert.equal(slip.branding.appName, 'CallSaar');
+    assert.equal(slip.branding.appName, 'OrderSaathi');
 
     // Check Store Details
     assert.equal(slip.store.name, 'Gupta Kirana Store A');

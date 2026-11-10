@@ -1,4 +1,4 @@
-// CallSaar Prisma Schema
+// OrderSaathi Prisma Schema
 // Phase A: Multi-Store Database Architecture
 
 generator client {

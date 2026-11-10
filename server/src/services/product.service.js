@@ -3,7 +3,7 @@ import prisma from '../config/prisma.js';
 /**
  * Product Service - Store-Scoped Catalogue Operations (Phase C1)
  *
- * Implements strict tenant-isolated catalogue management for authenticated kirana stores.
+ * Implements strict tenant-isolated catalogue management for authenticated local stores.
  * Every merchant query and mutation is strictly scoped by `storeId`.
  */
 

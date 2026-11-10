@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "CallSaar - AI-powered voice ordering and order management assistant for Kirana stores",
+  "description": "OrderSaathi - A voice-first ordering platform that connects customers with local retail stores, allowing customers to discover products and place orders naturally using their voice in their preferred language.",
   "workspaces": [
     "client",
     "server"

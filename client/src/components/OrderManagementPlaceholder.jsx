@@ -11,7 +11,7 @@ export const OrderManagementPlaceholder = () => {
     },
     {
       title: 'Intelligent Order Extraction',
-      desc: 'Automatic parsing of Kirana items, quantities, and units into structured cart orders.',
+      desc: 'Automatic parsing of store items, quantities, and units into structured cart orders.',
       icon: ShoppingBag,
       status: 'Phase 4',
     },

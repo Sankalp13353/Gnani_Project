@@ -94,13 +94,13 @@ export const StoreDiscoveryPage = () => {
         <div className="max-w-2xl space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Voice Commerce for Kirana Stores</span>
+            <span>AI Voice Commerce for Local Stores</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
-            Discover Local Kirana Stores Near You
+            Discover Local Stores Near You
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Select your preferred neighborhood Kirana store to browse fresh grocery items, place voice orders in Hindi or English, and pick up in store.
+            Select your preferred neighborhood local store to browse products, place voice orders in Hindi or English, and pick up in store.
           </p>
         </div>
       </div>
@@ -113,7 +113,7 @@ export const StoreDiscoveryPage = () => {
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
             <input
               type="text"
-              placeholder="Search store name (e.g. Ramesh Kirana, Gupta Mart)..."
+              placeholder="Search store name (e.g. Ramesh Store, Gupta Mart)..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -232,7 +232,7 @@ export const StoreDiscoveryPage = () => {
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
               {hasFilters
                 ? 'No stores match your current filters. Try searching for a different name, city, or clearing your filters.'
-                : 'No Kirana stores are currently registered in this directory.'}
+                : 'No local stores are currently registered in this directory.'}
             </p>
           </div>
           {hasFilters && (

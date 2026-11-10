@@ -1,8 +1,8 @@
-# CallSaar
+# OrderSaathi
 
-> **AI-powered voice ordering and order management assistant for Kirana stores.**
+> **A voice-first ordering platform that connects customers with local retail stores, allowing customers to discover products and place orders naturally using their voice in their preferred language.**
 
-CallSaar is designed to enable small Indian retail businesses (Kirana stores) to accept, transcribe, and manage customer orders placed naturally in Hindi, English, and Hinglish.
+OrderSaathi is designed to enable local retail businesses to accept, transcribe, and manage customer orders placed naturally in Hindi, English, and Hinglish.
 
 ---
 
@@ -13,14 +13,14 @@ CallSaar is designed to enable small Indian retail businesses (Kirana stores) to
 - **Phase 3 (Complete)**: Order Understanding Engine – text preprocessing, entity & quantity extraction, catalogue matching, clarification handling, and draft order generation.
 - **Phase 3.1 (Complete)**: Unit Conversion & Pricing Audit – dimensional unit compatibility, sealed pack count calculation, and safe price conversions.
 - **Phase 4 (Complete)**: Gnani Prisma Speech-to-Text Integration – browser microphone intake, multer streaming, Gnani Prisma v3 REST ASR API integration, error mapping, and end-to-end voice-to-draft order pipeline.
-- **Phases 5–6 (Upcoming)**: Gnani AI Timbre (TTS) order confirmation and shopkeeper dashboard with packing slips.
+- **Phases 5–6 (Upcoming)**: Gnani AI Timbre (TTS) order confirmation and store owner dashboard with packing slips.
 
 ---
 
 ## Project Structure
 
 ```
-CallSaar/
+OrderSaathi/
 ├── client/
 │   ├── public/
 │   ├── src/
@@ -43,7 +43,7 @@ CallSaar/
 │   │   └── seed.js
 │   ├── src/
 │   │   ├── config/
-│   │   │   ├── aliases.js             # Kirana product vocabulary & colloquial term mappings
+│   │   │   ├── aliases.js             # Retail product vocabulary & colloquial term mappings
 │   │   │   ├── env.js
 │   │   │   └── prisma.js
 │   │   ├── controllers/
@@ -171,7 +171,7 @@ From the `server` directory:
 
 1. **Text Preprocessing & Normalization**:
    - Converts colloquial Hindi number words (`ek`, `do`, `teen`, `chaar`, `paanch`, `aadha`, `dedh`, `dhaai`) and English number words into digits.
-   - Cleans Indian Kirana honorifics and conversational fillers (`bhaiya`, `ji`, `de dena`, `chahiye`, `pack kar do`, `give me`).
+   - Cleans conversational honorifics and conversational fillers (`bhaiya`, `ji`, `de dena`, `chahiye`, `pack kar do`, `give me`).
    - Normalizes unit variations (`kilo`, `kg`, `litre`, `ltr`, `packet`, `gm`, `g`).
 2. **Entity & Quantity Extraction**:
    - Segments multi-item transcripts separated by commas, conjunctions (`aur`, `and`, `saath mein`), or quantity boundaries.
@@ -388,7 +388,7 @@ Converts customer spoken audio into text via **Gnani Prisma v3 REST API** (`http
 *Note: Draft orders are returned in-memory and are NOT persisted to the PostgreSQL database.*
 
 ### 3. Application Health Check (`GET /api/health`)
-- **Response** (`200 OK`): `{"success": true, "message": "CallSaar API is running"}`
+- **Response** (`200 OK`): `{"success": true, "message": "OrderSaathi API is running"}`
 
 ### 4. Database Health Check (`GET /api/health/db`)
 - **Response** (`200 OK`): `{"success": true, "database": "connected"}`

@@ -123,7 +123,7 @@ export const fetchOrderById = async (orderId, token = null) => {
 // ============================================================================
 
 /**
- * Register a new Kirana store merchant
+ * Register a new store merchant
  * POST /api/auth/register
  */
 export const registerMerchant = async (data) => {
@@ -132,7 +132,7 @@ export const registerMerchant = async (data) => {
 };
 
 /**
- * Login Kirana store merchant
+ * Login store merchant
  * POST /api/auth/login
  */
 export const loginMerchant = async (credentials) => {
@@ -141,7 +141,7 @@ export const loginMerchant = async (credentials) => {
 };
 
 /**
- * Logout Kirana store merchant and terminate session
+ * Logout store merchant and terminate session
  * POST /api/auth/logout
  */
 export const logoutMerchant = async () => {
@@ -223,7 +223,7 @@ export const downloadImportTemplate = async () => {
   const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
   const link = document.createElement('a');
   link.href = url;
-  link.setAttribute('download', 'callsaar_product_import_template.csv');
+  link.setAttribute('download', 'ordersaathi_product_import_template.csv');
   document.body.appendChild(link);
   link.click();
   link.remove();

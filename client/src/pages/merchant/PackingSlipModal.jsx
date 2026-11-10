@@ -63,10 +63,10 @@ export const PackingSlipModal = ({ orderId, onClose }) => {
           body * {
             visibility: hidden !important;
           }
-          #callsaar-printable-slip, #callsaar-printable-slip * {
+          #ordersaathi-printable-slip, #ordersaathi-printable-slip * {
             visibility: visible !important;
           }
-          #callsaar-printable-slip {
+          #ordersaathi-printable-slip {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
@@ -136,7 +136,7 @@ export const PackingSlipModal = ({ orderId, onClose }) => {
 
         {/* Printable Packing Slip Area */}
         {!loading && packingSlip && (
-          <div id="callsaar-printable-slip" className="p-8 bg-white text-slate-900 space-y-6 text-xs">
+          <div id="ordersaathi-printable-slip" className="p-8 bg-white text-slate-900 space-y-6 text-xs">
             {/* Header / Branding */}
             <div className="border-b-2 border-slate-900 pb-4 flex items-start justify-between">
               <div>
@@ -265,7 +265,7 @@ export const PackingSlipModal = ({ orderId, onClose }) => {
               )}
             </div>
 
-            {/* Shopkeeper Checklist / Footer */}
+            {/* Store Staff Checklist / Footer */}
             <div className="border-t border-slate-300 pt-4 text-[10px] text-slate-500 flex items-center justify-between">
               <div>
                 <p>Packed by: _______________________</p>

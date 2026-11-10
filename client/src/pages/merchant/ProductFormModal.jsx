@@ -130,7 +130,7 @@ export const ProductFormModal = ({ isOpen, onClose, onSuccess, initialData = nul
             <p className="text-xs text-slate-500">
               {isEditing
                 ? 'Update pricing, availability, and inventory details'
-                : 'Add a new Kirana item to your store catalogue'}
+                : 'Add a new product to your store catalogue'}
             </p>
           </div>
           <button

@@ -222,7 +222,7 @@ export const getMerchantOrderById = async ({ storeId, orderId }) => {
 };
 
 /**
- * Shopkeeper accepts a pending order.
+ * Store owner accepts a pending order.
  * Transition: PENDING_APPROVAL -> ACCEPTED.
  */
 export const acceptOrder = async ({ storeId, orderId }) => {
@@ -274,7 +274,7 @@ export const acceptOrder = async ({ storeId, orderId }) => {
 };
 
 /**
- * Shopkeeper rejects a pending order with a required reason.
+ * Store owner rejects a pending order with a required reason.
  * Transition: PENDING_APPROVAL -> REJECTED.
  */
 export const rejectOrder = async ({ storeId, orderId, rejectionReason }) => {
@@ -336,7 +336,7 @@ export const rejectOrder = async ({ storeId, orderId, rejectionReason }) => {
 };
 
 /**
- * Shopkeeper starts preparing an accepted order.
+ * Store owner starts preparing an accepted order.
  * Transition: ACCEPTED -> PREPARING.
  */
 export const startOrderPreparation = async ({ storeId, orderId }) => {
@@ -387,7 +387,7 @@ export const startOrderPreparation = async ({ storeId, orderId }) => {
 };
 
 /**
- * Shopkeeper marks a preparing order as ready for customer pickup.
+ * Store owner marks a preparing order as ready for customer pickup.
  * Transition: PREPARING -> READY_FOR_PICKUP.
  */
 export const markOrderReadyForPickup = async ({ storeId, orderId }) => {
@@ -607,7 +607,7 @@ export const getPackingSlipData = async ({ storeId, orderId }) => {
 
   if (order.status === 'PENDING_APPROVAL') {
     const error = new Error(
-      'Packing slip is unavailable: order must be reviewed and accepted by shopkeeper first'
+      'Packing slip is unavailable: order must be reviewed and accepted by store owner first'
     );
     error.status = 400;
     throw error;
@@ -633,8 +633,8 @@ export const getPackingSlipData = async ({ storeId, orderId }) => {
   return {
     packingSlipNumber: `PS-${order.orderNumber}`,
     branding: {
-      appName: 'CallSaar',
-      tagline: 'Kirana Voice Ordering & Store Pickup Platform',
+      appName: 'OrderSaathi',
+      tagline: 'Local Store Voice Ordering & Pickup Platform',
     },
     store: {
       id: order.store.id,
